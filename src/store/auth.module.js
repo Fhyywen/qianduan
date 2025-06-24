@@ -1,5 +1,5 @@
 import AuthService from '@/services/AuthService'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 
 const state = {
   user: null,
