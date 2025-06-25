@@ -245,17 +245,24 @@ export default {
   },
   methods: {
     async fetchAvailableModels() {
-      try {
-        this.availableModels = await this.$store.dispatch('agent/fetchAvailableModels')
-      } catch (error) {
-        console.error('Failed to fetch models:', error)
-        this.availableModels = [
-          { id: 'qwen-turbo', name: '通义千问Turbo' },
-          { id: 'qwen-plus', name: '通义千问Plus' },
-          { id: 'qwen-max', name: '通义千问Max' }
-        ]
+    try {
+      // 从Vuex获取模型列表
+      this.availableModels = await this.$store.dispatch('agent/fetchAvailableModels')
+      
+      // 确保当前选择的model在列表中
+      if (!this.availableModels.some(m => m.id === this.formData.model)) {
+        this.formData.model = this.availableModels[0]?.id || ''
       }
-    },
+    } catch (error) {
+      console.error('Failed to fetch models:', error)
+      // 使用默认值
+      this.availableModels = [
+        { id: 'qwen-turbo', name: '通义千问Turbo' },
+        { id: 'qwen-plus', name: '通义千问Plus' },
+        { id: 'qwen-max', name: '通义千问Max' }
+      ]
+    }
+  },
     validateForm() {
       this.errors = {}
       let isValid = true

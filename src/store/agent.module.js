@@ -41,6 +41,9 @@ const mutations = {
   },
   DELETE_AGENT(state, agentId) {
     state.agents = state.agents.filter(agent => agent.id !== agentId)
+  },
+  SET_AVAILABLE_MODELS(state, models) {
+    state.availableModels = models
   }
 }
 
@@ -149,6 +152,26 @@ const actions = {
     } finally {
       commit('SET_LOADING', false)
     }
+  },
+  async fetchAvailableModels({ commit, state }) {
+    try {
+      // 如果已经有模型数据，直接返回
+      if (state.availableModels.length > 0) {
+        return state.availableModels
+      }
+      
+      // 这里可以添加从API获取模型的逻辑
+      // const models = await AgentService.getAvailableModels()
+      // commit('SET_AVAILABLE_MODELS', models)
+      // return models
+      
+      // 如果没有API，直接返回预设模型
+      return state.availableModels
+    } catch (error) {
+      console.error('Failed to fetch models:', error)
+      // 返回预设模型作为fallback
+      return state.availableModels
+    }
   }
 }
 
@@ -157,7 +180,8 @@ const getters = {
   getModelById: state => id => state.availableModels.find(model => model.id === id),
   publicAgents: state => state.agents.filter(agent => agent.is_public),
   userAgents: (state, getters, rootState) => 
-    state.agents.filter(agent => agent.user_id === rootState.auth.user.id)
+    state.agents.filter(agent => agent.user_id === rootState.auth.user.id),
+  availableModels: state => state.availableModels
 }
 
 export default {
