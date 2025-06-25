@@ -108,15 +108,33 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+// router/index.js
+router.beforeEach(async (to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} | Agent Platform` : 'Agent Platform'
 
+  // 从store获取认证状态（不要直接从localStorage读取）
   const isAuthenticated = store.getters['auth/isAuthenticated']
   
   // 检查需要认证的路由
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
+      // 如果token存在但store未更新，尝试加载用户
+      if (localStorage.getItem('token')) {
+        try {
+          await store.dispatch('auth/loadUser')
+          next()
+          return
+        } catch (error) {
+          // 如果加载用户失败，跳转到登录页
+          next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+          })
+          return
+        }
+      }
+      
       next({
         path: '/login',
         query: { redirect: to.fullPath }

@@ -21,17 +21,13 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useStore } from 'vuex'
 import axios from 'axios'
 
-const props = defineProps({
-  setToken: {
-    type: Function,
-    default: (token) => {
-      console.warn('No setToken function provided, using default')
-      localStorage.setItem('token', token)
-    }
-  }
-})
+const router = useRouter()
+const route = useRoute()
+const store = useStore()
 
 const usernameOrEmail = ref('')
 const password = ref('')
@@ -48,8 +44,17 @@ const handleSubmit = async () => {
       password: password.value
     })
     
-    // 调用父组件方法或使用默认处理
-    props.setToken(response.data.access_token)
+    // 1. 先提交 mutation 更新状态
+    store.commit('auth/SET_TOKEN', response.data.access_token)
+    
+    // 2. 等待用户信息加载完成
+    await store.dispatch('auth/loadUser')
+    
+    // 3. 检查重定向路径或默认跳转
+    const redirectPath = route.query.redirect || '/agents'
+    
+    // 4. 使用 replace 而不是 push 避免历史记录问题
+    await router.replace(redirectPath)
     
   } catch (err) {
     error.value = err.response?.data?.message || 'Login failed'
