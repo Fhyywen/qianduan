@@ -91,6 +91,20 @@ export default {
       userInput: userMessage.content, // 使用格式化后的内容
       parentExecutionId: this.sessionId
     });
+
+    console.log("获得的响应",response)
+    const { responseText,execution_id} =  response;
+    console.log("提取的:",responseText,execution_id)
+    this.sessionId = execution_id;
+    
+    // 将AI的回复添加到消息列表
+    this.messages.push({
+      role: 'assistant',
+      content: responseText // 使用response_text作为回复内容
+    });
+    console.log('当前messages数组:', this.messages);
+
+
     
     // 处理响应...
   } catch (error) {
