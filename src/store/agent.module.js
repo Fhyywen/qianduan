@@ -45,6 +45,10 @@ const mutations = {
   },
   SET_AVAILABLE_MODELS(state, models) {
     state.availableModels = models
+  },
+  SET_NOTIFICATION(state, notification) {
+    // 处理通知逻辑，例如将通知信息保存到 state 中
+    state.notification = notification;
   }
 }
 

@@ -127,7 +127,7 @@ const handleSubmit = async () => {
 
   try {
     const response = await axios.post(
-      'http://127.0.0.1:5000/user/personal-center',
+      'http://127.0.0.1:5000/auth/center',
       formData,
       {
         headers: {
@@ -147,7 +147,7 @@ const handleSubmit = async () => {
 
 <style scoped>
 .profile-content {
-  padding: 0px 20px 20px;
+  padding: 0 20px 20px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);

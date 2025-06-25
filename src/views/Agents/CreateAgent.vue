@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import AgentForm from '@/components/AgentForm.vue'
@@ -34,7 +34,7 @@ const handleSubmit = async (formData) => {
   try {
     loading.value = true;
     error.value = null;
-    
+
     // 准备请求数据 - 确保不包含前端生成的id
     const requestData = {
       name: formData.name,
@@ -72,10 +72,10 @@ const handleSubmit = async (formData) => {
 
   } catch (err) {
     // 增强的错误处理
-    const errorMsg = err.response?.data?.error 
-      || err.message 
+    const errorMsg = err.response?.data?.error
+      || err.message
       || 'Failed to create agent';
-    
+
     error.value = errorMsg;
     console.error('Create agent error:', {
       error: err,
@@ -92,9 +92,9 @@ const handleSubmit = async (formData) => {
     // 平滑滚动到错误位置
     nextTick(() => {
       const errorEl = document.querySelector('.error-message');
-      errorEl?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
+      errorEl?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
       });
     });
 

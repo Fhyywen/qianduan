@@ -88,17 +88,17 @@ const actions = {
   },
 
   async loadUser({ commit }) {
-    const token = state.token
-    if (!token) return null
-    
+    const token = state.token;
+    if (!token) return null;
+
     try {
-      const user = jwtDecode(token)
-      commit('SET_USER', user)
-      return user
+        const user = jwtDecode(token);
+        commit('SET_USER', user);
+        return user;
     } catch (error) {
-      commit('SET_ERROR', 'Invalid token')
-      commit('SET_TOKEN', null)
-      return null
+        commit('SET_ERROR', 'Invalid token');
+        commit('SET_TOKEN', null);
+        return null;
     }
   },
 

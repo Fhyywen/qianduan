@@ -71,7 +71,9 @@ export default {
       return this.$store.getters['auth/isAuthenticated'];
     },
     currentUser() {
-      return this.$store.getters['auth/currentUser'] || {};
+      const user = this.$store.getters['auth/currentUser'] || {};
+      console.log('Current User:', user); // 添加日志
+      return user;
     }
   },
   methods: {
