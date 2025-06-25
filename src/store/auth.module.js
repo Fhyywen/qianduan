@@ -39,6 +39,7 @@ const mutations = {
 
 const actions = {
   async refreshToken({ commit, state }) {
+    console.log("22222")
     try {
       const { token } = await AuthService.refreshToken()
       console.log("auth.module的token",token)
