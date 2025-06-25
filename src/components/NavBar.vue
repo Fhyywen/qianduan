@@ -180,6 +180,7 @@ export default {
 .username {
   color: #2c3e50;
   font-weight: 500;
+  margin-right: 10px;
 }
 
 .avatar {
