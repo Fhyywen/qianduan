@@ -1,6 +1,7 @@
 import TongyiService from '@/services/TongyiService'
-import AgentService from '@/services/agentService'
+import AgentService from '@/services/agentService';
 
+console.log('AgentService 导入成功:', AgentService);
 
 const state = {
   agents: [],
@@ -54,27 +55,49 @@ const mutations = {
 
 const actions = {
   async fetchAgents({ commit }, showPublic) {
-    try {
-      const response = await AgentService.listAgents(showPublic);
-      console.log('Vuex接收到的智能体数据:', response); // 添加日志
-      return response; // 直接返回响应数据
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      throw error;
+  console.log('开始获取agents，showPublic:', showPublic);
+  try {
+    const rawResponse = await AgentService.listAgents(showPublic);
+    console.log('Vuex接收到的原始响应:', rawResponse);
+    
+    if (!rawResponse || !Array.isArray(rawResponse)) {
+      console.error('响应不是数组:', rawResponse);
+      return [];
     }
-  },
+    
+    const formattedAgents = rawResponse.map(agent => ({
+      ...agent,
+      public: agent.is_public,
+      id: agent.id.toString(),
+    }));
+    
+    console.log('格式化后的数据:', formattedAgents);
+    return formattedAgents;
+  } catch (error) {
+    console.error('完整错误:', error);
+    throw error;
+  }
+},
 
   async fetchAgent({ commit }, agentId) {
-    commit('SET_LOADING', true)
+    commit('SET_LOADING', true);
     try {
-      const agent = await AgentService.getAgent(agentId)
-      commit('SET_CURRENT_AGENT', agent)
-      return agent
+      const agent = await AgentService.getAgent(agentId);
+      
+      // 转换单个智能体的字段名
+      const formattedAgent = {
+        ...agent,
+        public: agent.is_public,
+        id: agent.id.toString(),
+      };
+      
+      commit('SET_CURRENT_AGENT', formattedAgent);
+      return formattedAgent;
     } catch (error) {
-      commit('SET_ERROR', error.message)
-      throw error
+      commit('SET_ERROR', error.message);
+      throw error;
     } finally {
-      commit('SET_LOADING', false)
+      commit('SET_LOADING', false);
     }
   },
 

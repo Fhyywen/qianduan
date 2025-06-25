@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue' // 添加 onMounted 导入
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
@@ -104,6 +104,14 @@ export default {
         deleting.value = false
       }
     }
+
+    // 现在 onMounted 可用
+    onMounted(() => {
+      console.log('AgentCard 已挂载，接收的agent数据：', props.agent);
+      console.log('Agent ID:', props.agent.id);
+      console.log('Agent 名称:', props.agent.name);
+      console.log('是否公开:', props.agent.is_public);
+    });
 
     return {
       isOwner,

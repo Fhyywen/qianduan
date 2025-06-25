@@ -18,12 +18,13 @@ export default {
   
   async listAgents(publicOnly = false) {
     try {
-      const response = await api.get('/agents', {
+      const response = await api.get('/agents/', {
         params: { public: publicOnly },
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       })
+      console('agentService返回',response)
       return response.data
     } catch (error) {
       console.error('List agents error:', error)
@@ -100,9 +101,9 @@ export default {
         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
       }
     });
-    
+    console.log("agentService返回",response)
     // 直接返回响应数据（根据Postman结果，响应是数组）
-    return response.data || [];
+    return response || [];
     } catch (error) {
     console.error('List agents error:', error);
     throw this._handleError(error);
