@@ -41,6 +41,7 @@ const actions = {
   async refreshToken({ commit, state }) {
     try {
       const { token } = await AuthService.refreshToken()
+      console.log("auth.module的token",token)
       commit('SET_TOKEN', token)
       return token
     } catch (error) {

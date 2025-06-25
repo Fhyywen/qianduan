@@ -68,51 +68,41 @@ export default {
       }
     },
     async sendMessage() {
-      if (!this.userInput.trim() || this.loading) return
-      
-      const userMessage = {
-        role: 'user',
-        content: this.userInput
-      }
-      
-      this.messages.push(userMessage)
-      this.userInput = ''
-      
-      this.loading = true
-      
-      try {
-        const response = await this.$store.dispatch('agent/executeAgent', {
-          agentId: this.agentId,
-          input: userMessage.content,
-          parentExecutionId: this.sessionId
-        })
-        
-        this.sessionId = response.execution_id
-        
-        this.messages.push({
-          role: 'assistant',
-          content: response.output
-        })
-        
-        // Save session to localStorage
-        localStorage.setItem(`chat_session_${this.agentId}`, JSON.stringify({
-          sessionId: this.sessionId,
-          messages: this.messages
-        }))
-        
-      } catch (error) {
-        console.error('Failed to send message:', error)
-        this.messages.push({
-          role: 'error',
-          content: 'Failed to get response from the agent.'
-        })
-      } finally {
-        this.loading = false
-        this.$nextTick(() => {
-          this.scrollToBottom()
-        })
-      }
-    },
+  if (!this.userInput.trim() || this.loading) return;
+  
+  // 确保 agent 存在且有效
+  if (!this.agent?.id) {
+    console.error('No valid agent selected');
+    return;
+  }
+
+  const userMessage = {
+    role: 'user',
+    content: this.userInput.trim() // 确保去除空白字符
+  };
+
+  this.messages.push(userMessage);
+  this.userInput = '';
+  this.loading = true;
+  
+  try {
+    const response = await this.$store.dispatch('agent/executeAgent', {
+      agentId: this.agent.id, // 确保传递正确的 agentId
+      userInput: userMessage.content, // 使用格式化后的内容
+      parentExecutionId: this.sessionId
+    });
+    
+    // 处理响应...
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    this.messages.push({
+      role: 'error',
+      content: error.message || 'Failed to get response'
+    });
+  } finally {
+    this.loading = false;
+  }
+},
     scrollToBottom() {
       const container = this.$refs.messagesContainer
       if (container) {

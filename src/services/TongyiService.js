@@ -1,12 +1,17 @@
-import axios from '@/services/api' // 假设你已经配置了axios实例
+// TongyiService.js
+import axios from '@/services/api.js' // 假设已配置axios实例
 import { ref } from 'vue'
-
+import api from '@/services/api'
+console.log('tongyi中的api 导入成功:', api);
 const DEFAULT_MAX_TOKENS = 1000
 
+/**
+ * 消息类 - 用于构建对话上下文
+ */
 class Message {
   /**
-   * @param {'system'|'user'|'assistant'} role 
-   * @param {string} content 
+   * @param {'system'|'user'|'assistant'} role 消息角色
+   * @param {string} content 消息内容
    */
   constructor(role, content) {
     this.role = role
@@ -14,14 +19,17 @@ class Message {
   }
 }
 
+/**
+ * 通义服务类 - 处理与AI模型的交互
+ */
 class TongyiService {
-  static apiKey = null
-  static baseUrl = null
+  static apiKey = null          // API密钥
+  static baseUrl = null         // 基础API地址
 
   /**
    * 初始化通义API配置
-   * @param {string} apiKey 
-   * @param {string|null} baseUrl 
+   * @param {string} apiKey API密钥
+   * @param {string|null} baseUrl 基础API地址（可选）
    */
   static initialize(apiKey, baseUrl = null) {
     this.apiKey = apiKey
@@ -29,12 +37,53 @@ class TongyiService {
   }
 
   /**
-   * 生成AI响应（前端简化版）
-   * @param {Object} agent 
-   * @param {string} userInput 
-   * @param {number|null} executionId 
-   * @param {Array<Message>|null} historyMessages 
-   * @param {number} maxHistoryTurns 
+   * 执行代理对话 - 核心方法
+   * @param {Object} agent 代理配置对象（需包含id、system_prompt等字段）
+   * @param {string} userInput 用户输入内容
+   * @param {string|null} executionId 执行ID（用于对话历史追踪）
+   * @param {Array<Message>|null} historyMessages 历史消息列表
+   * @returns {Promise<{response: string, execution: Object}>} 包含AI响应和执行信息的对象
+   */
+  static async executeAgent({ agent, userInput, parentExecutionId }) {
+    // 参数验证
+    if (!agent || !userInput) {
+      throw new Error('Missing required parameters: agent or userInput');
+    }
+
+    try {
+// 从agent对象中获取id
+      const agentId = agent.id;
+      if (!agentId) {
+        throw new Error('Agent对象缺少id字段');
+      }
+      console.log("ty-agent.id",agentId)
+
+      const payload = {
+        agent_id: agent.id,
+        model: agent.model,
+        input: userInput,
+        parameters: {
+          temperature: agent.temperature,
+          max_tokens: agent.max_tokens
+        },
+        parent_execution_id: parentExecutionId
+      };
+
+      const response = await api.post(`/agents/${agentId}/execute`, payload);
+      return response.data;
+    } catch (error) {
+      console.error('API Error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Failed to execute agent');
+    }
+  }
+
+  /**
+   * 生成AI响应 - 封装具体API调用逻辑
+   * @param {Object} agent 代理配置对象
+   * @param {string} userInput 用户输入
+   * @param {string|null} executionId 执行ID
+   * @param {Array<Message>|null} historyMessages 历史消息
+   * @param {number} maxHistoryTurns 最大历史轮次（默认3轮）
    * @returns {Promise<{response: string, execution: Object}>}
    */
   static async generateResponse(
@@ -45,7 +94,7 @@ class TongyiService {
     maxHistoryTurns = 3
   ) {
     try {
-      // 构建消息上下文
+      // 构建对话上下文消息
       const messages = this.generateContextMessages(
         agent,
         userInput,
@@ -54,8 +103,8 @@ class TongyiService {
         maxHistoryTurns
       )
 
-      // 调用后端API（实际前端应调用自己的后端，再由后端调用Dashscope）
-      const response = await axios.post('/api/tongyi/generate', {
+      // 调用后端API（实际应由前端后端转发至通义API）
+      const response = await axios.post('/api/tongyi/execute', {
         agent_id: agent.id,
         messages: this.convertMessagesToApiFormat(messages),
         temperature: agent.temperature || 0.7,
@@ -64,7 +113,8 @@ class TongyiService {
         execution_id: executionId
       }, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
         }
       })
 
@@ -73,13 +123,13 @@ class TongyiService {
         execution: response.data.execution
       }
     } catch (error) {
-      console.error('Tongyi API error:', error)
+      console.error('通义API调用失败:', error)
       throw new Error(error.response?.data?.error || 'Failed to generate response')
     }
   }
 
   /**
-   * 构建消息上下文
+   * 构建对话上下文消息（私有方法）
    * @private
    */
   static generateContextMessages(
@@ -90,45 +140,36 @@ class TongyiService {
     maxHistoryTurns
   ) {
     const messages = [
-      new Message('system', agent.system_prompt)
+      new Message('system', agent.system_prompt || '你是一个智能助手，能回答各种问题。')
     ]
 
-    if (historyMessages) {
+    // 添加历史消息或对话历史
+    if (historyMessages && historyMessages.length > 0) {
       messages.push(...historyMessages)
     } else if (executionId) {
-      // 前端场景下通常从store获取历史记录
       const history = this._getConversationHistory(executionId, maxHistoryTurns)
       messages.push(...history)
     }
 
+    // 添加当前用户输入
     messages.push(new Message('user', userInput))
     return messages
   }
 
   /**
-   * 获取对话历史（前端应从store获取）
+   * 获取对话历史（私有方法，实际应从状态管理中获取）
    * @private
    */
   static _getConversationHistory(executionId, maxTurns = 3) {
-    // 实际实现应从Vuex store获取历史记录
+    // 示例：此处应从Vuex或localStorage获取历史记录
+    // 实际项目中需根据状态管理方案调整
     const history = []
-    // 伪代码 - 实际应从store.executions查找
-    /*
-    let current = store.getters.getExecutionById(executionId)
-    while (current && maxTurns > 0) {
-      if (current.parent_execution_id) {
-        history.unshift(new Message('assistant', current.output))
-        history.unshift(new Message('user', current.input))
-        maxTurns--
-      }
-      current = store.getters.getExecutionById(current.parent_execution_id)
-    }
-    */
+    console.log(`模拟获取执行ID为 ${executionId} 的对话历史，最大轮次: ${maxTurns}`)
     return history
   }
 
   /**
-   * 转换消息格式为API所需格式
+   * 转换消息格式为API所需格式（私有方法）
    * @private
    */
   static convertMessagesToApiFormat(messages) {
@@ -139,39 +180,49 @@ class TongyiService {
   }
 
   /**
-   * 直接调用模型API（仅供演示，实际应通过后端调用）
+   * 直接调用模型API（仅供演示，实际项目中应通过后端调用）
    * @private
    */
   static async callModelApi(agent, messages) {
-    // 注意：前端不应直接调用Dashscope API，这里只是示例
-    const response = await axios.post(
-      this.baseUrl || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-      {
-        model: agent.model,
-        input: {
-          messages: this.convertMessagesToApiFormat(messages)
+    console.warn('警告：前端不应直接调用通义API，此方法仅用于演示')
+    try {
+      const response = await axios.post(
+        this.baseUrl || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+        {
+          model: agent.model,
+          input: {
+            messages: this.convertMessagesToApiFormat(messages)
+          },
+          parameters: {
+            temperature: agent.temperature || 0.7,
+            max_tokens: agent.max_tokens || DEFAULT_MAX_TOKENS
+          }
         },
-        parameters: {
-          temperature: agent.temperature || 0.7,
-          max_tokens: agent.max_tokens || DEFAULT_MAX_TOKENS
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
         }
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    return response.data
+      )
+      return response.data
+    } catch (error) {
+      console.error('直接调用模型API失败:', error)
+      throw error
+    }
   }
 }
 
-// 创建Vue可用的响应式服务
+/**
+ * 导出Vue组合式函数 - 提供响应式的服务调用接口
+ */
 export function useTongyiService() {
   const loading = ref(false)
   const error = ref(null)
 
+  /**
+   * 生成AI响应（带加载状态和错误处理）
+   */
   const generateResponse = async (...args) => {
     loading.value = true
     error.value = null
@@ -186,9 +237,27 @@ export function useTongyiService() {
     }
   }
 
+  /**
+   * 执行代理对话（带加载状态和错误处理）
+   */
+  const executeAgent = async (...args) => {
+    loading.value = true
+    error.value = null
+    try {
+      const result = await TongyiService.executeAgent(...args)
+      return result
+    } catch (err) {
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     initialize: TongyiService.initialize,
     generateResponse,
+    executeAgent,
     loading,
     error
   }
