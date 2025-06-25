@@ -27,12 +27,14 @@
           <template v-if="isAuthenticated">
             <div class="user-info">
               <span class="username">{{ currentUser.username }}</span>
-              <div
-                @mouseenter="handleAvatarHoverEnter"
-                @mouseleave="handleAvatarHoverLeave"
-                style="position: relative"
-              >
-                <img :src="avatarUrl" alt="Avatar" class="avatar" />
+              <div style="position: relative">
+                <img
+                  :src="avatarUrl"
+                  alt="Avatar"
+                  class="avatar"
+                  @mouseenter="handleAvatarHoverEnter"
+                  @mouseleave="handleAvatarHoverLeave"
+                />
                 <div :class="{ 'dropdown-menu': true, 'show': isDropdownOpen }">
                   <button class="dropdown-item" @click="logout">
                     <span class="icon">🚪</span> 退出
@@ -64,20 +66,20 @@ export default {
     return {
       isDropdownOpen: ref(false),
       avatarUrl: defaultAvatar
-    }
+    };
   },
   computed: {
     isAuthenticated() {
-      return this.$store.getters['auth/isAuthenticated']
+      return this.$store.getters['auth/isAuthenticated'];
     },
     currentUser() {
-      return this.$store.getters['auth/currentUser'] || {}
+      return this.$store.getters['auth/currentUser'] || {};
     }
   },
   methods: {
     logout() {
-      this.$store.dispatch('auth/logout')
-      this.$router.push('/login')
+      this.$store.dispatch('auth/logout');
+      this.$router.push('/login');
     },
     handleAvatarHoverEnter() {
       this.isDropdownOpen = true;
@@ -86,7 +88,7 @@ export default {
       this.isDropdownOpen = false;
     }
   }
-}
+};
 </script>
 
 <style scoped>
@@ -145,10 +147,11 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  padding: 20px 20px;
   background-color: #f4f4f9;
   color: #333;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
 }
 
 .navbar a {
@@ -165,12 +168,12 @@ export default {
 .navbar-links {
   display: flex;
   align-items: center;
+
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
 .username {
@@ -185,16 +188,22 @@ export default {
   object-fit: cover;
   cursor: pointer;
   border: 2px solid #ddd;
+  transition: transform 0.3s;
+}
+
+.avatar:hover {
+  transform: scale(1.2);
 }
 
 .dropdown-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 4px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   display: none;
   z-index: 100;
   min-width: 120px;

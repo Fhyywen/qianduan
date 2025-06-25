@@ -147,11 +147,11 @@ const handleSubmit = async () => {
 
 <style scoped>
 .profile-content {
-  padding: 20px;
+  padding: 0px 20px 20px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  margin: 20px;
+  margin-left: 20px;
 }
 
 .profile-section {
@@ -174,6 +174,8 @@ const handleSubmit = async () => {
 .profile-avatar-wrapper {
   position: relative;
   cursor: pointer;
+  width: 120px; /* 固定宽度与头像相同 */
+  height: 120px; /* 固定高度与头像相同 */
 }
 
 .profile-avatar {
@@ -181,14 +183,19 @@ const handleSubmit = async () => {
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #eee;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  /* 移除默认的边框和阴影 */
+  border: none;
+  box-shadow: none;
+  /* 移除右边距 */
+  margin-right: 0;
   transition: filter 0.3s ease;
-  margin-right: 500px;
 }
 
+/* 只在悬停时显示边框和阴影 */
 .profile-avatar-wrapper:hover .profile-avatar {
-  filter: brightness(70%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  filter: brightness(90%);
 }
 
 .avatar-hover-text {
@@ -200,6 +207,7 @@ const handleSubmit = async () => {
   font-size: 14px;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none; /* 防止文字干扰点击 */
 }
 
 .profile-avatar-wrapper:hover .avatar-hover-text {
