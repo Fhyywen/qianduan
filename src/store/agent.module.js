@@ -1,5 +1,6 @@
 import TongyiService from '@/services/TongyiService'
-import AgentService from '@/services/AgentService'
+import AgentService from '@/services/agentService'
+
 
 const state = {
   agents: [],
@@ -48,17 +49,14 @@ const mutations = {
 }
 
 const actions = {
-  async fetchAgents({ commit }, publicOnly = false) {
-    commit('SET_LOADING', true)
+  async fetchAgents({ commit }, showPublic) {
     try {
-      const agents = await AgentService.listAgents(publicOnly)
-      commit('SET_AGENTS', agents)
-      return agents
+      const response = await AgentService.listAgents(showPublic);
+      console.log('Vuex接收到的智能体数据:', response); // 添加日志
+      return response; // 直接返回响应数据
     } catch (error) {
-      commit('SET_ERROR', error.message)
-      throw error
-    } finally {
-      commit('SET_LOADING', false)
+      console.error('Error fetching agents:', error);
+      throw error;
     }
   },
 

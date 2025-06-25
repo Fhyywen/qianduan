@@ -42,18 +42,25 @@ export default {
   },
   methods: {
     async fetchAgents() {
-      this.loading = true
-      try {
-        this.agents = await this.$store.dispatch('agent/fetchAgents', this.showPublic)
-      } catch (error) {
-        console.error('Failed to fetch agents:', error)
-      } finally {
-        this.loading = false
-      }
-    },
-    togglePublic() {
-      this.showPublic = !this.showPublic
-      this.fetchAgents()
+  this.loading = true;
+  try {
+    // 直接获取数组数据
+    const agents = await this.$store.dispatch('agent/fetchAgents', this.showPublic);
+    console.log('组件接收到的智能体数据:', agents); // 添加日志
+    
+    // 确保agents是数组
+    if (Array.isArray(agents)) {
+      this.agents = agents;
+    } else {
+      console.error('获取的智能体数据不是数组格式:', agents);
+      this.agents = [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch agents:', error);
+    this.agents = [];
+  } finally {
+    this.loading = false;
+  }
     },
     async handleDeleteAgent(agentId) {
       if (confirm('Are you sure you want to delete this agent?')) {

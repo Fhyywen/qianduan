@@ -92,17 +92,20 @@ export default {
     }
   },
   
-  async listAgentExecutions(agentId) {
-    try {
-      const response = await api.get(`/agents/${agentId}/executions`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        }
-      })
-      return response.data
+  async listAgents(publicOnly = false) {
+  try {
+    const response = await api.get('/agents', {
+      params: { public: publicOnly },
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      }
+    });
+    
+    // 直接返回响应数据（根据Postman结果，响应是数组）
+    return response.data || [];
     } catch (error) {
-      console.error('List executions error:', error)
-      throw this._handleError(error)
+    console.error('List agents error:', error);
+    throw this._handleError(error);
     }
   },
   
