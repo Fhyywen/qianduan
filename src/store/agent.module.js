@@ -189,7 +189,7 @@ const actions = {
       parentExecutionId
     });
     
-    return { response_text, execution };
+    return { responseText:response_text, execution };
   } catch (error) {
     commit('SET_ERROR', error.message);
     throw new Error(`Failed to execute agent: ${error.message}`);

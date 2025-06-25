@@ -42,6 +42,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import axios from 'axios'
+import authService from '@/services/authService';
 
 const router = useRouter()
 const route = useRoute()
@@ -55,33 +56,29 @@ const circlePosition = ref({ x: 0, y: 0 })
 const circleSize = 25
 
 const handleSubmit = async () => {
-  try {
-    loading.value = true
-    error.value = null
+    try {
+        loading.value = true
+        error.value = null
 
-    const response = await axios.post('http://localhost:5000/auth/login', {
-      username_or_email: usernameOrEmail.value,
-      password: password.value
-    })
-
-    // 1. 先提交 mutation 更新状态
-    store.commit('auth/SET_TOKEN', response.data.access_token)
-
-    // 2. 等待用户信息加载完成
-    await store.dispatch('auth/loadUser')
-
-    // 3. 检查重定向路径或默认跳转
-    const redirectPath = route.query.redirect || '/agents'
-
-    // 4. 使用 replace 而不是 push 避免历史记录问题
-    await router.replace(redirectPath)
-
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Login failed'
-    console.error('Login error:', err)
-  } finally {
-    loading.value = false
-  }
+        // 调用 authService 中的 login 方法
+        const response = await authService.login(usernameOrEmail.value, password.value);
+        
+        // 1. 提交 mutation 更新状态（假设 auth module 已定义）
+        store.commit('auth/SET_TOKEN', response.access_token);
+        
+        // 2. 加载用户信息
+        await store.dispatch('auth/loadUser');
+        
+        // 3. 跳转路由
+        const redirectPath = route.query.redirect || '/agents';
+        await router.replace(redirectPath);
+        
+    } catch (err) {
+        error.value = err.response?.data?.message || '登录失败';
+        console.error('登录错误:', err);
+    } finally {
+        loading.value = false;
+    }
 }
 
 const goToRegister = () => {
