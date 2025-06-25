@@ -11,6 +11,8 @@ const AgentDetail = () => import('@/views/Agents/AgentDetail.vue')
 const EditAgent = () => import('@/views/Agents/EditAgent.vue')
 const Chat = () => import('@/views/Chat.vue')
 
+const Center = () => import('@/views/Auth/Center.vue')
+
 const routes = [
   {
     path: '/',
@@ -46,6 +48,15 @@ const routes = [
     meta: { 
       requiresAuth: true,
       title: 'My Agents'
+    }
+  },
+  {
+    path: '/center',
+    name: 'Center',
+    component: Center,
+    meta: {
+      requiresAuth: true,
+      title: 'Center'
     }
   },
   {
@@ -87,6 +98,7 @@ const routes = [
     },
     props: true
   },
+
   // 404 页面处理
   {
     path: '/:pathMatch(.*)*',
