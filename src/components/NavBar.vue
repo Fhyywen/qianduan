@@ -1,20 +1,20 @@
 <template>
   <nav class="navbar">
     <div class="navbar-brand">
-      <router-link to="/">Agent Platform</router-link>
+      <router-link to="/">智能体平台</router-link>
     </div>
     
     <div class="navbar-links">
-      <router-link to="/agents">Agents</router-link>
+      <router-link to="/agents">智能体</router-link>
       
       <template v-if="isAuthenticated">
         <span class="username">{{ currentUser.username }}</span>
-        <button @click="logout">Logout</button>
+        <button @click="logout">登出</button>
       </template>
       
       <template v-else>
-        <router-link to="/login">Login</router-link>
-        <router-link to="/register">Register</router-link>
+        <router-link to="/login">登录</router-link>
+        <router-link to="/register">注册</router-link>
       </template>
     </div>
   </nav>

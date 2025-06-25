@@ -36,7 +36,7 @@
           minlength="6"
         />
         <button type="submit" :disabled="isLoading" class="register-button">
-          {{ isLoading ? 'Registering...' : 'Register' }}
+          {{ isLoading ? '注册中...' : '注册' }}
         </button>
       </form>
     </div>

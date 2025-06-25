@@ -27,9 +27,9 @@
         />
       </div>
       <div style="display: flex; gap: 10px">
-        <button type="button" @click="goToRegister">Register</button>
+        <button type="button" @click="goToRegister">注册</button>
         <button type="submit" :disabled="loading">
-          {{ loading ? 'Logging in...' : 'Login' }}
+          {{ loading ? '登录中...' : '登录' }}
         </button>
       </div>
       <p v-if="error" class="error-message">{{ error }}</p>
