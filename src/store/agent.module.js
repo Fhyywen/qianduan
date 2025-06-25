@@ -3,6 +3,8 @@ import AgentService from '@/services/agentService';
 
 console.log('AgentService 导入成功:', AgentService);
 
+
+
 const state = {
   agents: [],
   currentAgent: null,
@@ -13,10 +15,14 @@ const state = {
     { id: 'qwen-max', name: '通义千问Max' }
   ],
   loading: false,
-  error: null
+  error: null,
+  notification: null
 }
 
 const mutations = {
+  SET_NOTIFICATION(state, notification) {
+    state.notification = notification;
+  },
   SET_AGENTS(state, agents) {
     state.agents = agents
   },
