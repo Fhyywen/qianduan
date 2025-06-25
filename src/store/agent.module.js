@@ -89,7 +89,7 @@ const actions = {
     commit('SET_LOADING', true);
     try {
       const agent = await AgentService.getAgent(agentId);
-      
+      console.log("获取的agent为:",agent)
       // 转换单个智能体的字段名
       const formattedAgent = {
         ...agent,
@@ -168,42 +168,35 @@ const actions = {
     }
   },
 
-  async executeAgent({ commit }, { agentId, userInput, parentExecutionId }) {
-    commit('SET_LOADING', true)
-    try {
-      const { response_text, execution } = await TongyiService.executeAgent(
-        agentId, 
-        userInput, 
-        parentExecutionId
-      )
-      return { response_text, execution }
-    } catch (error) {
-      commit('SET_ERROR', error.message)
-      throw error
-    } finally {
-      commit('SET_LOADING', false)
+  async executeAgent({ commit, state }, { agentId, userInput, parentExecutionId }) {
+  commit('SET_LOADING', true);
+  
+  try {
+    // 验证参数
+    if (!agentId || !userInput?.trim()) {
+      throw new Error('Missing required parameters: agentId or userInput');
     }
-  },
-  async fetchAvailableModels({ commit, state }) {
-    try {
-      // 如果已经有模型数据，直接返回
-      if (state.availableModels.length > 0) {
-        return state.availableModels
-      }
-      
-      // 这里可以添加从API获取模型的逻辑
-      // const models = await AgentService.getAvailableModels()
-      // commit('SET_AVAILABLE_MODELS', models)
-      // return models
-      
-      // 如果没有API，直接返回预设模型
-      return state.availableModels
-    } catch (error) {
-      console.error('Failed to fetch models:', error)
-      // 返回预设模型作为fallback
-      return state.availableModels
+    
+    // 确保 agent 存在
+    const agent = state.agents.find(a => a.id === agentId) || state.currentAgent;
+    if (!agent) {
+      throw new Error('Agent not found');
     }
+
+    const { response_text, execution } = await TongyiService.executeAgent({
+      agent: agent, // 传递完整 agent 对象
+      userInput: userInput.trim(),
+      parentExecutionId
+    });
+    
+    return { response_text, execution };
+  } catch (error) {
+    commit('SET_ERROR', error.message);
+    throw new Error(`Failed to execute agent: ${error.message}`);
+  } finally {
+    commit('SET_LOADING', false);
   }
+}
 }
 
 const getters = {
