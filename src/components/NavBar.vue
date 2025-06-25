@@ -25,15 +25,13 @@
 
         <div class="navbar-links">
           <template v-if="isAuthenticated">
-            <div class="user-info">
+            <div class="user-info" @mouseenter="handleUserInfoHoverEnter" @mouseleave="handleUserInfoHoverLeave">
               <span class="username">{{ currentUser.username }}</span>
               <div style="position: relative">
                 <img
                   :src="avatarUrl"
                   alt="Avatar"
                   class="avatar"
-                  @mouseenter="handleAvatarHoverEnter"
-                  @mouseleave="handleAvatarHoverLeave"
                 />
                 <div :class="{ 'dropdown-menu': true, 'show': isDropdownOpen }">
                   <button class="dropdown-item" @click="logout">
@@ -81,10 +79,10 @@ export default {
       this.$store.dispatch('auth/logout');
       this.$router.push('/login');
     },
-    handleAvatarHoverEnter() {
+    handleUserInfoHoverEnter() {
       this.isDropdownOpen = true;
     },
-    handleAvatarHoverLeave() {
+    handleUserInfoHoverLeave() {
       this.isDropdownOpen = false;
     }
   }
@@ -174,6 +172,7 @@ export default {
 .user-info {
   display: flex;
   align-items: center;
+  margin-right: 80px;
 }
 
 .username {
