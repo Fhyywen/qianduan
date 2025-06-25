@@ -23,8 +23,9 @@ const actions = {
   }
 }
 
+
 export default {
-  namespaced: true, // 必须启用命名空间
+  namespaced: true, // 必须启用命名空间1
   state,
   mutations,
   actions
