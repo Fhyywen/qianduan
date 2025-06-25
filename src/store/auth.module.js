@@ -1,6 +1,7 @@
 import AuthService from '@/services/AuthService'
 import { jwtDecode } from 'jwt-decode'
 
+
 const state = {
   user: null,
   token: localStorage.getItem('token') || null,
@@ -37,6 +38,16 @@ const mutations = {
 }
 
 const actions = {
+  async refreshToken({ commit, state }) {
+    try {
+      const { token } = await AuthService.refreshToken()
+      commit('SET_TOKEN', token)
+      return token
+    } catch (error) {
+      commit('LOGOUT')
+      throw error
+    }
+  },
   async login({ commit }, { usernameOrEmail, password }) {
     commit('SET_LOADING', true)
     try {
@@ -53,18 +64,27 @@ const actions = {
   },
 
   async register({ commit }, userData) {
-    commit('SET_LOADING', true)
-    try {
-      const { token, user } = await AuthService.register(userData)
-      commit('SET_TOKEN', token)
-      commit('SET_USER', user)
-      return user
-    } catch (error) {
-      commit('SET_ERROR', error.response?.data?.errors || 'Registration failed')
-      throw error
-    } finally {
-      commit('SET_LOADING', false)
+  commit('SET_LOADING', true);
+  commit('SET_ERROR', null);
+  try {
+    const response = await AuthService.register(userData);
+    commit('SET_TOKEN', response.token);
+    commit('SET_USER', response.user);
+    return response.user;
+  } catch (error) {
+    let errorMsg = 'Registration failed';
+    if (error.response) {
+      if (error.response.data?.errors) {
+        errorMsg = Object.values(error.response.data.errors).join(', ');
+      } else if (error.response.data?.message) {
+        errorMsg = error.response.data.message;
+      }
     }
+    commit('SET_ERROR', errorMsg);
+    throw error;
+  } finally {
+    commit('SET_LOADING', false);
+  }
   },
 
   async loadUser({ commit }) {

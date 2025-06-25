@@ -1,25 +1,37 @@
-import api from './api'
+// src/services/authService.js
+import axios from 'axios'  // 确保正确导入axios
+
+const API_URL = 'http://localhost:5000'
 
 export default {
+  async register(userData) {
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, userData)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+  
   async login(usernameOrEmail, password) {
-    const response = await api.post('/auth/login', {
-      username_or_email: usernameOrEmail,
-      password
-    })
-    return response.data
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        usernameOrEmail,
+        password
+      })
+      return response.data
+    } catch (error) {
+      throw error
+    }
   },
   
-  async register(username, email, password) {
-    const response = await api.post('/auth/register', {
-      username,
-      email,
-      password
-    })
-    return response.data
-  },
-  
-  async getCurrentUser() {
-    const response = await api.get('/auth/me')
-    return response.data
+  // 添加refreshToken方法
+  async refreshToken() {
+    try {
+      const response = await axios.post(`${API_URL}/auth/refresh`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
   }
 }
