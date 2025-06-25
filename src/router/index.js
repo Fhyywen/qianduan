@@ -16,20 +16,20 @@ const Center = () => import('@/views/Auth/Center.vue')
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Home,
-    meta: { 
-      requiresAuth: true,
-      title: 'Dashboard'
+    name: 'Login',
+    component: Login,
+    meta: {
+      guestOnly: true,
+      title: 'Login'
     }
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-    meta: { 
-      guestOnly: true,
-      title: 'Login'
+    path: '/home',
+    name: 'Home',
+    component: Home,
+    meta: {
+      requiresAuth: true,
+      title: 'Dashboard'
     }
   },
   {
