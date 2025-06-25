@@ -16,21 +16,6 @@ export default {
     }
   },
   
-  async listAgents(publicOnly = false) {
-    try {
-      const response = await api.get('/agents/', {
-        params: { public: publicOnly },
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        }
-      })
-      console('agentService返回',response)
-      return response.data
-    } catch (error) {
-      console.error('List agents error:', error)
-      throw this._handleError(error)
-    }
-  },
   
   async getAgent(id) {
     try {
@@ -39,7 +24,8 @@ export default {
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       })
-      return response.data
+      console.log("得到的agent回复为getAgent:",response)
+      return response
     } catch (error) {
       console.error('Get agent error:', error)
       throw this._handleError(error)
