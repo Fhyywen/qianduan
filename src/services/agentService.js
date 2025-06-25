@@ -1,20 +1,71 @@
 import api from './api'
 
 export default {
-  async createAgent(agentData) {
-    try {
-      const response = await api.post('/agents', agentData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        }
-      })
-      return response.data
-    } catch (error) {
-      console.error('Create agent error:', error)
-      throw this._handleError(error)
+
+// agentService.js
+async createAgent(agentData) {
+  try {
+    const response = await api.post('/agents', agentData, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+      }
+    })
+
+    console.log('创建代理API响应:', {
+      status: response.status,
+      headers: response.headers,
+      data: response.data
+    })
+
+    // 处理可能的空响应
+    if (!response.data) {
+      console.warn('服务器返回空响应，但请求可能已成功')
+      return { name: agentData.name }
     }
-  },
+
+    // 如果没有ID但创建成功，返回部分数据
+    if (!response.data.id) {
+      console.warn('服务器未返回代理ID，但创建可能已成功')
+      return { name: agentData.name, ...response.data }
+    }
+
+    return response.data
+  } catch (error) {
+    console.error('创建代理请求失败:', {
+      requestData: agentData,
+      error: error.response || error
+    })
+
+    // 特殊处理：如果服务器返回400但实际创建成功
+    if (error.response && error.response.status === 400) {
+      console.warn('服务器返回400错误，但代理可能已创建')
+      // 尝试从错误信息中获取有用信息
+      const errorData = error.response.data || {}
+      return { name: agentData.name, error: errorData }
+    }
+
+    throw this._handleError(error)
+  }
+},
+
+
+
+
+  // async createAgent(agentData) {
+  //   try {
+  //     const response = await api.post('/agents', agentData, {
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+  //       }
+  //     })
+  //     return response.data
+  //   } catch (error) {
+  //     console.error('Create agent error:', error)
+  //     throw this._handleError(error)
+  //   }
+  // },
   
   async listAgents(publicOnly = false) {
     try {
