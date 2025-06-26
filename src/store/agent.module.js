@@ -192,13 +192,13 @@ const actions = {
       throw new Error('Agent not found');
     }
 
-    const { response_text, execution } = await TongyiService.executeAgent({
+    const { response_text, execution_id:ex_id } = await TongyiService.executeAgent({
       agent: agent, // 传递完整 agent 对象
       userInput: userInput.trim(),
       parentExecutionId
     });
-    
-    return { responseText:response_text, execution };
+    console.log("agent_module.js获取的：",response_text,ex_id)
+    return { responseText:response_text, ex_id };
   } catch (error) {
     commit('SET_ERROR', error.message);
     throw new Error(`Failed to execute agent: ${error.message}`);

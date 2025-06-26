@@ -82,16 +82,17 @@ class TongyiService {
     
     // 兼容不同响应结构
     const responseText = response.response_text
-    
+    const ex_id = response.execution_id
+    console.log("ex_id:",ex_id)
     if (!responseText) {
-      console.error('Missing response text in:', responseData);
+      console.error('Missing response text in:', responseText);
       throw new Error('API response missing required field: response_text');
     }
     
 
     return {
       response_text: responseText,
-      parent_execution_id: parentExecutionId
+      execution_id: ex_id
     };
   } catch (error) {
     // 详细错误分类

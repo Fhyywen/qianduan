@@ -84,7 +84,9 @@ export default {
   this.messages.push(userMessage);
   this.userInput = '';
   this.loading = true;
-  
+  console.log("sessionId:",this.sessionId)
+  //从本地存储获取sessionId，如果没有则为null
+  //this.sessionId = localStorage.getItem('agentSessionId') || null; 
   try {
     const response = await this.$store.dispatch('agent/executeAgent', {
       agentId: this.agent.id, // 确保传递正确的 agentId
@@ -93,10 +95,12 @@ export default {
     });
 
     console.log("获得的响应",response)
-    const { responseText,execution_id} =  response;
-    console.log("提取的:",responseText,execution_id)
-    this.sessionId = execution_id;
-    
+    const { responseText,ex_id} =  response;
+    this.ex_id = response.ex_id
+    console.log("提取的:",responseText,ex_id)
+    this.sessionId = ex_id;
+    //将sessionId传入本地存储
+    //localStorage.setItem('agentSessionId', execution_id);  // 新增：存入localStorage
     // 将AI的回复添加到消息列表
     this.messages.push({
       role: 'assistant',
