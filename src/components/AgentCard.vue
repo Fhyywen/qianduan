@@ -90,15 +90,42 @@ export default {
 
       deleting.value = true
       try {
-        await store.dispatch('agent/deleteAgent', props.agent.id)
-        store.commit('SET_NOTIFICATION', {
-          type: 'success',
-          message: 'Agent deleted successfully'
+        const agentId = props.agent.id
+        console.log('开始删除代理:', {
+          id: agentId,
+          name: props.agent.name,
+          type: typeof agentId
         })
+        
+        await store.dispatch('agent/deleteAgent', agentId)
+        
+        // 显示成功通知
+        await store.dispatch('notification/showNotification', {
+          type: 'success',
+          message: `"${props.agent.name}" 删除成功`,
+          timeout: 5000
+        })
+        
+        console.log('代理删除成功')
       } catch (error) {
-        store.commit('SET_NOTIFICATION', {
+        console.error('删除代理失败:', {
+          error: error,
+          message: error.message,
+          response: error.response
+        })
+        
+        let errorMessage = '删除代理失败'
+        if (error.message) {
+          errorMessage = error.message
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message
+        }
+        
+        // 显示错误通知
+        await store.dispatch('notification/showNotification', {
           type: 'error',
-          message: error.message || 'Failed to delete agent'
+          message: errorMessage,
+          timeout: 8000
         })
       } finally {
         deleting.value = false
@@ -108,9 +135,12 @@ export default {
     // 现在 onMounted 可用
     onMounted(() => {
       console.log('AgentCard 已挂载，接收的agent数据：', props.agent);
-      console.log('Agent ID:', props.agent.id);
+      console.log('Agent ID:', props.agent.id, '类型:', typeof props.agent.id);
       console.log('Agent 名称:', props.agent.name);
       console.log('是否公开:', props.agent.is_public);
+      console.log('用户ID:', props.agent.user_id);
+      console.log('当前用户ID:', store.getters['auth/currentUser']?.id);
+      console.log('是否为所有者:', store.getters['auth/currentUser']?.id === props.agent.user_id);
     });
 
     return {

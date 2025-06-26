@@ -20,9 +20,6 @@ const state = {
 }
 
 const mutations = {
-  SET_NOTIFICATION(state, notification) {
-    state.notification = notification;
-  },
   SET_AGENTS(state, agents) {
     state.agents = agents
   },
@@ -48,14 +45,17 @@ const mutations = {
     }
   },
   DELETE_AGENT(state, agentId) {
-    state.agents = state.agents.filter(agent => agent.id !== agentId)
+    console.log('DELETE_AGENT mutation 执行，删除ID:', agentId)
+    console.log('删除前代理数量:', state.agents.length)
+    
+    // 确保ID比较的一致性
+    const stringId = agentId.toString()
+    state.agents = state.agents.filter(agent => agent.id.toString() !== stringId)
+    
+    console.log('删除后代理数量:', state.agents.length)
   },
   SET_AVAILABLE_MODELS(state, models) {
     state.availableModels = models
-  },
-  SET_NOTIFICATION(state, notification) {
-    // 处理通知逻辑，例如将通知信息保存到 state 中
-    state.notification = notification;
   }
 }
 
@@ -141,12 +141,21 @@ const actions = {
   async deleteAgent({ commit }, agentId) {
     commit('SET_LOADING', true)
     try {
+      console.log('Vuex deleteAgent 开始，ID:', agentId)
+      
       await AgentService.deleteAgent(agentId)
+      
+      console.log('Vuex deleteAgent 成功，从状态中移除代理')
       commit('DELETE_AGENT', agentId)
+      
+      // 如果当前代理是被删除的代理，清空当前代理
       if (state.currentAgent?.id === agentId) {
         commit('SET_CURRENT_AGENT', null)
       }
+      
+      console.log('代理删除完成')
     } catch (error) {
+      console.error('Vuex deleteAgent 错误:', error)
       commit('SET_ERROR', error.message)
       throw error
     } finally {
