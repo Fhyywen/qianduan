@@ -1,6 +1,8 @@
 <template>
   <div class="profile-content">
     <h2>个人中心</h2>
+    
+    <!-- 头像设置部分保持不变 -->
     <div class="profile-section">
       <h3>头像设置</h3>
       <div class="avatar-container">
@@ -26,27 +28,30 @@
         />
       </div>
     </div>
-
+    
+    <!-- 账号设置部分修改为展示邮箱和管理员状态 -->
     <div class="profile-section">
-      <h3>账号设置</h3>
+      <h3>账号信息</h3>
       <div class="input-group">
-        <label>修改密码</label>
+        <label>用户邮箱</label>
         <input
-          type="password"
-          placeholder="输入新密码"
-          v-model="newPassword"
+          type="email"
+          placeholder="用户邮箱"
+          v-model="userEmail"
+          disabled 
         />
       </div>
       <div class="input-group">
-        <label>修改性别</label>
-        <select v-model="gender">
-          <option value="">选择性别</option>
-          <option value="male">男</option>
-          <option value="female">女</option>
-        </select>
+        <label>管理员状态</label>
+        <div class="admin-status">
+          <span :class="{'admin-yes': isAdmin, 'admin-no': !isAdmin}">
+            {{ isAdmin ? '是' : '否' }}
+          </span>
+        </div>
       </div>
     </div>
-
+    
+    <!-- API设置部分保持不变 -->
     <div class="profile-section">
       <h3>API 设置</h3>
       <div class="input-group">
@@ -74,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import defaultAvatar from './manbo.png';
 
@@ -85,29 +90,75 @@ const props = defineProps({
   }
 });
 
+// 新增：用户信息状态
+const userEmail = ref('');
+const isAdmin = ref(false);
+
 const avatar = ref(null);
-const newPassword = ref('');
-const gender = ref('');
+const newPassword = ref('');  // 保留但不再使用
+const gender = ref('');       // 保留但不再使用
 const openaiApiKey = ref('');
 const tongyiApiKey = ref('');
 const avatarUrl = ref(defaultAvatar);
 const isHovering = ref(false);
 
-// 头像处理函数保持不变...
+// 头像处理函数保持不变
+const handleAvatarChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    avatar.value = file;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      avatarUrl.value = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handleAvatarClick = () => {
+  document.getElementById('avatar').click();
+};
+
+const handleMouseEnter = () => {
+  isHovering.value = true;
+};
+
+const handleMouseLeave = () => {
+  isHovering.value = false;
+};
+
+// 新增：获取用户信息函数
+const fetchUserInfo = async () => {
+  const storedToken = localStorage.getItem('token');
+  try {
+    const response = await axios.get(
+      'http://127.0.0.1:5000/auth/center',
+      {
+        headers: {
+          'Authorization': `Bearer ${storedToken}`
+        }
+      }
+    );
+    
+    if (response.data) {
+      userEmail.value = response.data.email;
+      isAdmin.value = response.data.is_admin;
+    }
+  } catch (error) {
+    console.error('获取用户信息失败', error);
+    alert('获取用户信息失败，请重试');
+  }
+};
 
 const handleSubmit = async () => {
-  // 构建JSON数据（不包含文件）
   const data = {
     openai_api_key: openaiApiKey.value,
     tongyi_api_key: tongyiApiKey.value
-    // 如需传输其他字段：
-    // new_password: newPassword.value,
-    // gender: gender.value
   };
+  
   const storedToken = localStorage.getItem('token');
   console.log("发送的JSON数据:", data);
   console.log("JWT令牌:", props.token);
-
 
   try {
     const response = await axios.post(
@@ -116,12 +167,12 @@ const handleSubmit = async () => {
       {
         headers: {
           'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json'  // 显式设置为JSON格式
+          'Content-Type': 'application/json'
         }
       }
     );
     console.log(response.data);
-    alert('个人信息更新成功!');
+    alert('API密钥更新成功!');
   } catch (error) {
     console.error(error);
     if (error.response && error.response.data) {
@@ -131,6 +182,11 @@ const handleSubmit = async () => {
     }
   }
 };
+
+// 组件挂载时获取用户信息
+onMounted(() => {
+  fetchUserInfo();
+});
 </script>
 
 <style scoped>
@@ -162,8 +218,8 @@ const handleSubmit = async () => {
 .profile-avatar-wrapper {
   position: relative;
   cursor: pointer;
-  width: 120px; /* 固定宽度与头像相同 */
-  height: 120px; /* 固定高度与头像相同 */
+  width: 120px;
+  height: 120px;
 }
 
 .profile-avatar {
@@ -171,17 +227,12 @@ const handleSubmit = async () => {
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  /* 移除默认的边框和阴影 */
   border: none;
   box-shadow: none;
-  /* 移除右边距 */
-  margin-right: 0;
   transition: filter 0.3s ease;
 }
 
-/* 只在悬停时显示边框和阴影 */
 .profile-avatar-wrapper:hover .profile-avatar {
-  border: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   filter: brightness(90%);
 }
@@ -195,7 +246,7 @@ const handleSubmit = async () => {
   font-size: 14px;
   opacity: 0;
   transition: opacity 0.3s ease;
-  pointer-events: none; /* 防止文字干扰点击 */
+  pointer-events: none;
 }
 
 .profile-avatar-wrapper:hover .avatar-hover-text {
@@ -223,11 +274,34 @@ const handleSubmit = async () => {
   transition: border-color 0.3s ease;
 }
 
-.input-group input:focus,
-.input-group select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+/* 新增：管理员状态样式 */
+.admin-status {
+  width: 95%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-yes {
+  color: #28a745; /* 绿色 */
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.admin-no {
+  color: #dc3545; /* 红色 */
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+/* 只读输入框样式 */
+.input-group input:disabled {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+  border-color: #ddd;
 }
 
 button {
