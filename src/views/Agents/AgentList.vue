@@ -6,7 +6,6 @@
       <button @click="togglePublic" class="btn">
         {{ showPublic ? 'Show My Agents' : 'Show Public Agents' }}
       </button>
-      <button @click="testApiConnection" class="btn test-btn">Test API</button>
     </div>
     
     <div v-if="loading" class="loading">Loading...</div>
@@ -111,31 +110,6 @@ export default {
       }
     },
     
-    // 测试API连接
-    async testApiConnection() {
-      console.log('测试API连接...');
-      try {
-        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-        console.log('当前token:', token ? token.substring(0, 20) + '...' : '无token');
-        
-        // 测试简单的API调用
-        const response = await fetch('http://localhost:5000/agents', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('API测试响应状态:', response.status);
-        const data = await response.json();
-        console.log('API测试响应数据:', data);
-        
-        return data;
-      } catch (error) {
-        console.error('API测试失败:', error);
-        throw error;
-      }
-    }
   }
 }
 </script>
@@ -164,10 +138,6 @@ export default {
 
 .btn:hover {
   background-color: #3aa876;
-}
-
-.test-btn {
-  background-color: #ff9800;
 }
 
 .test-btn:hover {
