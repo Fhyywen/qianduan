@@ -91,23 +91,50 @@ export default {
     }
     
     try {
+      console.log('开始刷新token，refresh token:', refreshToken.substring(0, 20) + '...')
+      
       const response = await axios.post('http://localhost:5000/auth/refresh', null, {
         headers: {
           'Authorization': `Bearer ${refreshToken}`
         }
       });
       
+      console.log('刷新token响应:', response.data)
+      
       if (!response.data.access_token) {
         throw new Error('刷新响应缺少访问令牌');
       }
       
       localStorage.setItem('access_token', response.data.access_token);
+      
+      // 如果响应中包含新的refresh token，也更新它
+      if (response.data.refresh_token) {
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+      }
+      
+      console.log('Token刷新成功')
       return response.data.access_token;
       
     } catch (error) {
       console.error('刷新令牌错误:', error);
+      
+      // 清除无效的token
       this.logout();
-      throw error;
+      
+      if (error.response) {
+        const { status, data } = error.response;
+        if (status === 401) {
+          throw new Error('刷新令牌已过期，请重新登录');
+        } else if (status >= 500) {
+          throw new Error('服务器错误，请稍后重试');
+        } else {
+          throw new Error(data?.message || '刷新令牌失败');
+        }
+      } else if (error.code === 'ECONNABORTED') {
+        throw new Error('请求超时，请检查网络连接');
+      } else {
+        throw new Error('网络连接失败');
+      }
     }
   },
 

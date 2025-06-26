@@ -21,7 +21,8 @@ const state = {
 
 const mutations = {
   SET_AGENTS(state, agents) {
-    state.agents = agents
+    console.log('SET_AGENTS mutation 执行，设置智能体数量:', agents.length);
+    state.agents = agents;
   },
   SET_CURRENT_AGENT(state, agent) {
     state.currentAgent = agent
@@ -61,29 +62,40 @@ const mutations = {
 
 const actions = {
   async fetchAgents({ commit }, showPublic) {
-  console.log('开始获取agents，showPublic:', showPublic);
-  try {
-    const rawResponse = await AgentService.listAgents(showPublic);
-    console.log('Vuex接收到的原始响应:', rawResponse);
+    console.log('开始获取agents，showPublic:', showPublic);
+    commit('SET_LOADING', true);
     
-    if (!rawResponse || !Array.isArray(rawResponse)) {
-      console.error('响应不是数组:', rawResponse);
-      return [];
+    try {
+      const rawResponse = await AgentService.listAgents(showPublic);
+      console.log('Vuex接收到的原始响应:', rawResponse);
+      
+      if (!rawResponse || !Array.isArray(rawResponse)) {
+        console.error('响应不是数组:', rawResponse);
+        commit('SET_AGENTS', []);
+        return [];
+      }
+      
+      const formattedAgents = rawResponse.map(agent => ({
+        ...agent,
+        public: agent.is_public,
+        id: agent.id?.toString() || agent.id,
+      }));
+      
+      console.log('格式化后的数据:', formattedAgents);
+      
+      // 更新store中的agents状态
+      commit('SET_AGENTS', formattedAgents);
+      
+      return formattedAgents;
+    } catch (error) {
+      console.error('获取agents失败:', error);
+      commit('SET_ERROR', error.message);
+      commit('SET_AGENTS', []);
+      throw error;
+    } finally {
+      commit('SET_LOADING', false);
     }
-    
-    const formattedAgents = rawResponse.map(agent => ({
-      ...agent,
-      public: agent.is_public,
-      id: agent.id.toString(),
-    }));
-    
-    console.log('格式化后的数据:', formattedAgents);
-    return formattedAgents;
-  } catch (error) {
-    console.error('完整错误:', error);
-    throw error;
-  }
-},
+  },
 
   async fetchAgent({ commit }, agentId) {
     commit('SET_LOADING', true);
@@ -178,34 +190,51 @@ const actions = {
   },
 
   async executeAgent({ commit, state }, { agentId, userInput, parentExecutionId }) {
-  commit('SET_LOADING', true);
-  
-  try {
-    // 验证参数
-    if (!agentId || !userInput?.trim()) {
-      throw new Error('Missing required parameters: agentId or userInput');
-    }
+    commit('SET_LOADING', true);
     
-    // 确保 agent 存在
-    const agent = state.agents.find(a => a.id === agentId) || state.currentAgent;
-    if (!agent) {
-      throw new Error('Agent not found');
-    }
+    try {
+      console.log('Vuex executeAgent 开始:', { agentId, userInput, parentExecutionId });
+      
+      // 验证参数
+      if (!agentId || !userInput?.trim()) {
+        throw new Error('Missing required parameters: agentId or userInput');
+      }
+      
+      // 确保 agent 存在
+      const agent = state.agents.find(a => a.id === agentId) || state.currentAgent;
+      if (!agent) {
+        throw new Error('Agent not found');
+      }
 
-    const { response_text, execution } = await TongyiService.executeAgent({
-      agent: agent, // 传递完整 agent 对象
-      userInput: userInput.trim(),
-      parentExecutionId
-    });
-    
-    return { responseText:response_text, execution };
-  } catch (error) {
-    commit('SET_ERROR', error.message);
-    throw new Error(`Failed to execute agent: ${error.message}`);
-  } finally {
-    commit('SET_LOADING', false);
+      console.log('找到的agent:', agent);
+
+      const result = await TongyiService.executeAgent({
+        agent: agent, // 传递完整 agent 对象
+        userInput: userInput.trim(),
+        parentExecutionId
+      });
+      
+      console.log('TongyiService 返回结果:', result);
+      
+      // 处理返回结果
+      const { response_text, execution_id } = result;
+      
+      if (!response_text) {
+        throw new Error('AI服务未返回有效响应');
+      }
+      
+      return { 
+        responseText: response_text, 
+        execution_id: execution_id || parentExecutionId 
+      };
+    } catch (error) {
+      console.error('Vuex executeAgent 错误:', error);
+      commit('SET_ERROR', error.message);
+      throw new Error(`Failed to execute agent: ${error.message}`);
+    } finally {
+      commit('SET_LOADING', false);
+    }
   }
-}
 }
 
 const getters = {

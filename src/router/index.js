@@ -120,35 +120,49 @@ const router = createRouter({
 })
 
 // 路由守卫
-// router/index.js
 router.beforeEach(async (to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} | Agent Platform` : 'Agent Platform'
 
-  // 从store获取认证状态（不要直接从localStorage读取）
+  console.log('路由守卫触发:', {
+    to: to.path,
+    from: from.path,
+    requiresAuth: to.matched.some(record => record.meta.requiresAuth),
+    guestOnly: to.matched.some(record => record.meta.guestOnly)
+  })
+
+  // 检查是否需要初始化认证状态
   const isAuthenticated = store.getters['auth/isAuthenticated']
+  const hasToken = localStorage.getItem('access_token') || localStorage.getItem('token')
+  
+  console.log('认证状态检查:', {
+    isAuthenticated,
+    hasToken: !!hasToken,
+    currentUser: store.getters['auth/currentUser']
+  })
+
+  // 如果有token但store中没有用户信息，尝试加载用户
+  if (hasToken && !store.getters['auth/currentUser']) {
+    console.log('检测到token但无用户信息，尝试加载用户')
+    try {
+      await store.dispatch('auth/loadUser')
+      console.log('用户加载成功')
+    } catch (error) {
+      console.error('用户加载失败:', error)
+      // 清除无效的token
+      store.dispatch('auth/logout')
+    }
+  }
+  
+  // 重新获取认证状态
+  const currentAuthState = store.getters['auth/isAuthenticated']
   
   // 检查需要认证的路由
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated) {
-      // 如果token存在但store未更新，尝试加载用户
-      if (localStorage.getItem('token')) {
-        try {
-          await store.dispatch('auth/loadUser')
-          next()
-          return
-        } catch (error) {
-          // 如果加载用户失败，跳转到登录页
-          next({
-            path: '/login',
-            query: { redirect: to.fullPath }
-          })
-          return
-        }
-      }
-      
+    if (!currentAuthState) {
+      console.log('需要认证但未登录，跳转到登录页')
       next({
-        path: '/login',
+        path: '/',
         query: { redirect: to.fullPath }
       })
       return
@@ -157,12 +171,14 @@ router.beforeEach(async (to, from, next) => {
   
   // 检查仅允许未登录用户访问的路由
   if (to.matched.some(record => record.meta.guestOnly)) {
-    if (isAuthenticated) {
-      next('/')
+    if (currentAuthState) {
+      console.log('已登录用户访问登录页，跳转到首页')
+      next('/home')
       return
     }
   }
   
+  console.log('路由守卫通过，继续导航')
   next()
 })
 
