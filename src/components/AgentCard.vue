@@ -28,7 +28,7 @@
         class="btn chat-btn"
         title="Start Chat"
       >
-        <i class="icon-chat"></i> Chat
+        <i class="icon-chat"></i> 聊天
       </router-link>
       
       <router-link 
@@ -37,7 +37,7 @@
         class="btn edit-btn"
         title="Edit Agent"
       >
-        <i class="icon-edit"></i> Edit
+        <i class="icon-edit"></i> 编辑
       </router-link>
       
       <button 

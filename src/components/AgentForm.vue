@@ -2,7 +2,7 @@
   <form @submit.prevent="handleSubmit" class="agent-form">
     <!-- Name Field -->
     <div class="form-group">
-      <label for="name">Agent Name *</label>
+      <label for="name">智能体名称 *</label>
       <input
         id="name"
         v-model="formData.name"
@@ -16,7 +16,7 @@
 
     <!-- Description Field -->
     <div class="form-group">
-      <label for="description">Description</label>
+      <label for="description">描述</label>
       <textarea
         id="description"
         v-model="formData.description"
@@ -27,7 +27,7 @@
 
     <!-- System Prompt Field -->
     <div class="form-group">
-      <label for="system_prompt">System Prompt *</label>
+      <label for="system_prompt">系统提示词 *</label>
       <textarea
         id="system_prompt"
         v-model="formData.system_prompt"
@@ -38,21 +38,21 @@
       ></textarea>
       <span v-if="errors.system_prompt" class="error-message">{{ errors.system_prompt }}</span>
       <div class="hint">
-        This defines how your agent behaves. Be clear about its role and capabilities.
+        这个决定了你的智能体会给出怎么样的行为。确定好智能体的角色和能力。
       </div>
     </div>
 
     <!-- Model Selection -->
     <div class="form-row">
       <div class="form-group">
-        <label for="model">Model *</label>
+        <label for="model">模型 *</label>
         <select
           id="model"
           v-model="formData.model"
           required
           :class="{ 'error': errors.model }"
         >
-          <option value="">Select a model</option>
+          <option value="">选择一个模型</option>
           <option v-for="model in availableModels" :key="model.id" :value="model.id">
             {{ model.name }} ({{ model.id }})
           </option>
@@ -62,7 +62,7 @@
 
       <!-- Temperature Slider -->
       <div class="form-group">
-        <label for="temperature">Temperature: {{ formData.temperature }}</label>
+        <label for="temperature">温度: {{ formData.temperature }}</label>
         <input
           id="temperature"
           v-model.number="formData.temperature"
@@ -73,9 +73,9 @@
           class="slider"
         />
         <div class="slider-labels">
-          <span>Precise</span>
-          <span>Balanced</span>
-          <span>Creative</span>
+          <span>相关</span>
+          <span>平衡</span>
+          <span>发散</span>
         </div>
       </div>
     </div>
@@ -83,14 +83,14 @@
     <!-- Advanced Settings -->
     <div class="advanced-settings" :class="{ 'expanded': showAdvanced }">
       <button type="button" class="toggle-advanced" @click="toggleAdvanced">
-        {{ showAdvanced ? '▲ Hide Advanced Settings' : '▼ Show Advanced Settings' }}
+        {{ showAdvanced ? '▲ 高级设定' : '▼ 高级设定' }}
       </button>
 
       <div v-if="showAdvanced" class="advanced-content">
         <div class="form-row">
           <!-- Max Tokens -->
           <div class="form-group">
-            <label for="max_tokens">Max Tokens *</label>
+            <label for="max_tokens">最大 Tokens *</label>
             <input
               id="max_tokens"
               v-model.number="formData.max_tokens"
@@ -102,7 +102,7 @@
             />
             <span v-if="errors.max_tokens" class="error-message">{{ errors.max_tokens }}</span>
             <div class="hint">
-              Maximum length of the response (100-4000)
+              响应的最大长度（100-4000）
             </div>
           </div>
 
@@ -118,7 +118,7 @@
               step="0.1"
             />
             <div class="hint">
-              Controls diversity (0-1)
+              控制多样性（0-1）
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@
         <!-- Additional Parameters -->
         <div class="form-row">
           <div class="form-group">
-            <label for="presence_penalty">Presence Penalty</label>
+            <label for="presence_penalty">存在处罚</label>
             <input
               id="presence_penalty"
               v-model.number="formData.presence_penalty"
@@ -136,12 +136,12 @@
               step="0.1"
             />
             <div class="hint">
-              Penalize new tokens based on whether they appear in the text so far (-2 to 2)
+              根据到目前为止新标记是否出现在文本中对其进行惩罚（-2到2）
             </div>
           </div>
 
           <div class="form-group">
-            <label for="frequency_penalty">Frequency Penalty</label>
+            <label for="frequency_penalty">频率惩罚</label>
             <input
               id="frequency_penalty"
               v-model.number="formData.frequency_penalty"
@@ -151,7 +151,7 @@
               step="0.1"
             />
             <div class="hint">
-              Penalize new tokens based on their frequency in the text so far (-2 to 2)
+              根据文本中已有标记的出现频率对新生成的标记进行惩罚（范围：-2 到 2）
             </div>
           </div>
         </div>
@@ -165,9 +165,9 @@
         v-model="formData.is_public"
         type="checkbox"
       />
-      <label for="is_public">Make this agent public</label>
+      <label for="is_public">是否公开智能体</label>
       <div class="hint">
-        Public agents can be seen and used by other users
+        （公开智能体能被其他用户看见和使用）
       </div>
     </div>
 
@@ -187,7 +187,7 @@
         @click="handleCancel"
         class="btn-secondary"
       >
-        Cancel
+        取消
       </button>
     </div>
 
@@ -224,7 +224,7 @@ export default {
     },
     submitText: {
       type: String,
-      default: 'Save Agent'
+      default: '保存智能体'
     },
     loading: {
       type: Boolean,
@@ -315,7 +315,7 @@ export default {
       })
     },
     handleCancel() {
-      this.$emit('cancel')
+      this.$emit('取消')
     },
     toggleAdvanced() {
       this.showAdvanced = !this.showAdvanced
