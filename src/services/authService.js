@@ -7,22 +7,25 @@ const API_URL = 'http://localhost:5000'
 
 export default {
   async register(userData) {
-    try {
-      const response = await axios.post(`${API_URL}/auth/register`, 
-      {},  // 空 body
+  try {
+    const response = await axios.post(`${API_URL}/auth/register`,
+      userData,
       {
-        withCredentials: true,  // 关键配置
+        withCredentials: true,
         headers: {
           'Content-Type': 'application/json'
         }
       }
     );
-    return response.data.access_token;
+    // 返回一个包含 access_token 的对象，与登录接口保持一致
+    return {
+      access_token: response.data.access_token
+    };
   } catch (error) {
-    console.error('Refresh token failed:', error);
+    console.error('注册失败:', error);
     throw error;
   }
-  },
+},
   
   getAccessToken() {
     return localStorage.getItem('access_token');
