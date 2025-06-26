@@ -8,7 +8,7 @@
         v-model="formData.name"
         type="text"
         required
-        placeholder="My Awesome Agent"
+        placeholder="我的智能体001"
         :class="{ 'error': errors.name }"
       />
       <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
@@ -21,7 +21,7 @@
         id="description"
         v-model="formData.description"
         rows="3"
-        placeholder="What does this agent do?"
+        placeholder="这个智能体能干什么?"
       ></textarea>
     </div>
 
@@ -33,7 +33,7 @@
         v-model="formData.system_prompt"
         rows="8"
         required
-        placeholder="You are a helpful assistant..."
+        placeholder="请输入系统提示词"
         :class="{ 'error': errors.system_prompt }"
       ></textarea>
       <span v-if="errors.system_prompt" class="error-message">{{ errors.system_prompt }}</span>
