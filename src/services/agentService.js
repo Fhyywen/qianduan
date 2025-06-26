@@ -49,24 +49,6 @@ async createAgent(agentData) {
   }
 },
 
-
-
-
-  // async createAgent(agentData) {
-  //   try {
-  //     const response = await api.post('/agents', agentData, {
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-  //       }
-  //     })
-  //     return response.data
-  //   } catch (error) {
-  //     console.error('Create agent error:', error)
-  //     throw this._handleError(error)
-  //   }
-  // },
-  
   
   async getAgent(id) {
     try {
