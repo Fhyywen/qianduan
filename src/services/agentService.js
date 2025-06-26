@@ -82,15 +82,56 @@ async createAgent(agentData) {
   
   async deleteAgent(id) {
     try {
+      console.log('删除代理请求，ID:', id)
+      
       const response = await api.delete(`/agents/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         }
       })
-      return response.data
+      
+      console.log('删除代理响应:', {
+        status: response.status,
+        data: response.data
+      })
+      
+      // 检查响应状态
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`删除失败，服务器返回状态: ${response.status}`)
+      }
+      
+      return response.data || { success: true }
     } catch (error) {
-      console.error('Delete agent error:', error)
-      throw this._handleError(error)
+      console.error('删除代理请求失败:', {
+        agentId: id,
+        error: error.response || error,
+        message: error.message
+      })
+      
+      // 处理特定错误状态
+      if (error.response) {
+        const { status, data } = error.response
+        
+        if (status === 401) {
+          throw new Error('身份验证失败，请重新登录')
+        } else if (status === 403) {
+          throw new Error('权限不足，无法删除此代理')
+        } else if (status === 404) {
+          throw new Error('代理不存在或已被删除')
+        } else if (status >= 500) {
+          throw new Error('服务器内部错误，请稍后重试')
+        } else if (data?.message) {
+          throw new Error(data.message)
+        } else {
+          throw new Error(`删除失败 (状态码: ${status})`)
+        }
+      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('请求超时，请稍后重试')
+      } else if (!error.response) {
+        throw new Error('网络连接失败，请检查网络设置')
+      } else {
+        throw new Error(error.message || '删除代理失败')
+      }
     }
   },
   
