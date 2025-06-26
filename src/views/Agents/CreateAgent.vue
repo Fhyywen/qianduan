@@ -1,10 +1,10 @@
 <template>
   <div class="create-agent-container">
-    <h2>Create New Agent</h2>
+    <h2>创建新的智能体</h2>
     
     <AgentForm
       ref="agentForm"
-      submit-text="Create Agent"
+      submit-text="创建智能体"
       :loading="loading"
       @submit="handleSubmit"
       @cancel="handleCancel"
