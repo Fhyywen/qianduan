@@ -54,11 +54,11 @@ async createAgent(agentData) {
     try {
       const response = await api.get(`/agents/${id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('token') || ''}`
         }
       })
-      console.log("得到的agent回复为getAgent:",response)
-      return response
+      console.log("得到的agent回复为getAgent:", response)
+      return response // 现在response已经是data了
     } catch (error) {
       console.error('Get agent error:', error)
       throw this._handleError(error)
@@ -70,10 +70,10 @@ async createAgent(agentData) {
       const response = await api.put(`/agents/${id}`, updateData, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('token') || ''}`
         }
       })
-      return response.data
+      return response // 现在response已经是data了
     } catch (error) {
       console.error('Update agent error:', error)
       throw this._handleError(error)
@@ -86,21 +86,18 @@ async createAgent(agentData) {
       
       const response = await api.delete(`/agents/${id}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('token') || ''}`
         }
       })
       
       console.log('删除代理响应:', {
         status: response.status,
-        data: response.data
+        data: response
       })
       
-      // 检查响应状态
-      if (response.status !== 200 && response.status !== 204) {
-        throw new Error(`删除失败，服务器返回状态: ${response.status}`)
-      }
-      
-      return response.data || { success: true }
+      // 检查响应状态 - 由于api拦截器返回data，我们需要检查其他方式
+      // 如果删除成功，通常返回空对象或成功消息
+      return response || { success: true }
     } catch (error) {
       console.error('删除代理请求失败:', {
         agentId: id,
@@ -143,10 +140,10 @@ async createAgent(agentData) {
       }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('token') || ''}`
         }
       })
-      return response.data
+      return response // 现在response已经是data了
     } catch (error) {
       console.error('Execute agent error:', error)
       throw this._handleError(error)
@@ -154,19 +151,41 @@ async createAgent(agentData) {
   },
   
   async listAgents(publicOnly = false) {
-  try {
-    const response = await api.get('/agents', {
-      params: { public: publicOnly },
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+    try {
+      console.log('开始获取智能体列表，publicOnly:', publicOnly)
+      
+      const response = await api.get('/agents', {
+        params: { public: publicOnly },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('token') || ''}`
+        }
+      });
+      
+      console.log("agentService listAgents 原始响应:", response)
+      
+      // 检查响应结构
+      if (!response) {
+        console.warn('API返回空响应')
+        return []
       }
-    });
-    console.log("agentService返回",response)
-    // 直接返回响应数据（根据Postman结果，响应是数组）
-    return response || [];
+      
+      // 如果response是axios响应对象，获取data
+      const agentsData = response.data || response
+      
+      console.log("agentService listAgents 处理后的数据:", agentsData)
+      
+      // 确保返回数组
+      if (Array.isArray(agentsData)) {
+        return agentsData
+      } else if (agentsData && Array.isArray(agentsData.agents)) {
+        return agentsData.agents
+      } else {
+        console.warn('响应数据格式异常:', agentsData)
+        return []
+      }
     } catch (error) {
-    console.error('List agents error:', error);
-    throw this._handleError(error);
+      console.error('List agents error:', error);
+      throw this._handleError(error);
     }
   },
   
@@ -190,6 +209,8 @@ async createAgent(agentData) {
   
   // 错误处理统一方法
   _handleError(error) {
+    console.error('AgentService error:', error)
+    
     if (error.response) {
       // 服务器返回了错误响应
       const { status, data } = error.response

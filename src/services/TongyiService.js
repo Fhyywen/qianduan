@@ -45,29 +45,29 @@ class TongyiService {
    * @returns {Promise<{response: string, execution: Object}>} 包含AI响应和执行信息的对象
    */
   static async executeAgent({ agent, userInput, parentExecutionId }) {
-  // 参数验证
-  if (!agent || !userInput) {
-    throw new Error('Missing required parameters: agent or userInput');
-  }
-
-  try {
-    const agentId = agent.id;
-    if (!agentId) {
-      throw new Error('Agent对象缺少id字段');
+    // 参数验证
+    if (!agent || !userInput) {
+      throw new Error('Missing required parameters: agent or userInput');
     }
 
-    const payload = {
-      agent_id: agent.id,
-      model: agent.model,
-      input: userInput,
-      parameters: {
-        temperature: agent.temperature,
-        max_tokens: agent.max_tokens
-      },
-      parent_execution_id: parentExecutionId
-    };
+    try {
+      const agentId = agent.id;
+      if (!agentId) {
+        throw new Error('Agent对象缺少id字段');
+      }
 
-    console.log('Sending payload:', payload); // 调试日志
+      const payload = {
+        agent_id: agent.id,
+        model: agent.model,
+        input: userInput,
+        parameters: {
+          temperature: agent.temperature,
+          max_tokens: agent.max_tokens
+        },
+        parent_execution_id: parentExecutionId
+      };
+
+      console.log('Sending payload:', payload); // 调试日志
       
     const response = await api.post(`/agents/${agentId}/execute`, payload);
     console.log("API响应完整对象",response)

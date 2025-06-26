@@ -12,9 +12,16 @@ const api = axios.create({
 // 请求拦截器 - 添加认证头并处理请求配置
 api.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem('access_token') || localStorage.getItem('token');
     if (accessToken) {
       config.headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
+    // 为不同类型的请求设置不同的超时时间
+    if (config.url?.includes('/execute')) {
+      config.timeout = 60000; // 执行请求60秒超时
+    } else if (config.url?.includes('/agents') && config.method === 'post') {
+      config.timeout = 45000; // 创建代理45秒超时
     }
     
     // 添加请求开始时间，用于性能监控
@@ -32,7 +39,7 @@ api.interceptors.response.use(
   (response) => {
     // 计算请求耗时并记录（可选）
     const requestTime = Date.now() - response.config.__requestStart;
-    if (requestTime > 1000) {
+    if (requestTime > 5000) {
       console.warn(`请求耗时较长: ${requestTime}ms`, response.config.url);
     }
     
@@ -41,9 +48,10 @@ api.interceptors.response.use(
       return Promise.reject(new Error(response.data?.message || '请求失败'));
     }
     
+    // 返回response.data以保持向后兼容
     return response.data;
   },
-  (error) => {
+  async (error) => {
     // 统一错误处理逻辑
     let errorMessage = '未知错误';
     
@@ -65,8 +73,18 @@ api.interceptors.response.use(
           errorMessage = '请求的资源不存在';
           break;
           
+        case 408:
+          errorMessage = '请求超时，请稍后重试';
+          break;
+          
         case 500:
           errorMessage = data?.message || '服务器内部错误，请稍后再试';
+          break;
+          
+        case 502:
+        case 503:
+        case 504:
+          errorMessage = '服务器暂时不可用，请稍后重试';
           break;
           
         default:
@@ -75,8 +93,11 @@ api.interceptors.response.use(
     } else if (error.request) {
       // 请求已发出但未收到响应（网络问题）
       errorMessage = '网络连接失败，请检查您的网络设置';
+    } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      // 处理超时错误
+      errorMessage = '请求超时，请稍后重试';
     } else {
-      // 客户端错误（如配置错误）
+      // 请求设置出错
       errorMessage = error.message || '请求配置错误';
     }
     
@@ -96,7 +117,13 @@ async function handle401Error(error) {
   if (originalRequest._retrying) {
     // 清除令牌并跳转登录
     localStorage.removeItem('access_token');
-    window.location.href = '/login';
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    
+    // 如果当前不在登录页，跳转到登录页
+    if (window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
     return Promise.reject(error);
   }
   
@@ -104,7 +131,8 @@ async function handle401Error(error) {
   
   try {
     // 调用刷新令牌的方法
-    const newAccessToken = await authService.refreshToken();
+    const authService = await import('./authService.js');
+    const newAccessToken = await authService.default.refreshToken();
     if (newAccessToken) {
       // 更新请求头中的令牌
       localStorage.setItem('access_token', newAccessToken);
@@ -117,7 +145,12 @@ async function handle401Error(error) {
     console.error('令牌刷新失败:', refreshError);
     // 刷新失败，清除令牌并跳转登录
     localStorage.removeItem('access_token');
-    window.location.href = '/login';
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    
+    if (window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
   }
   
   return Promise.reject(error);
