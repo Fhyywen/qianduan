@@ -1,7 +1,7 @@
 <template>
   <main-layout>
     <div class="edit-agent">
-      <h2>Edit Agent</h2>
+      <h2>编辑智能体</h2>
       <agent-form
         :initial-data="agent"
         submit-text="Update Agent"

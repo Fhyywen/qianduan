@@ -8,15 +8,15 @@
 
     <div class="card-body">
       <p class="description" v-if="agent.description">{{ agent.description }}</p>
-      <p v-else class="no-description">No description provided</p>
+      <p v-else class="no-description">未提供描述</p>
 
       <div class="meta-info">
         <div class="meta-item">
-          <span class="label">Temperature:</span>
+          <span class="label">温度:</span>
           <span class="value">{{ agent.temperature }}</span>
         </div>
         <div class="meta-item">
-          <span class="label">Max Tokens:</span>
+          <span class="label">最大Tokens:</span>
           <span class="value">{{ agent.max_tokens }}</span>
         </div>
       </div>
@@ -49,7 +49,7 @@
       >
         <span v-if="deleting" class="spinner"></span>
         <template v-else>
-          <i class="icon-delete"></i> Delete
+          <i class="icon-delete"></i> 删除
         </template>
       </button>
     </div>

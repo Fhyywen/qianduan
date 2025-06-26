@@ -1,25 +1,25 @@
 <template>
   <div class="agent-list">
-    <h2>My Agents</h2>
+    <h2>我的智能体</h2>
     <div class="actions">
-      <router-link to="/agents/create" class="btn">Create New Agent</router-link>
+      <router-link to="/agents/create" class="btn">创建新的智能体</router-link>
       <button @click="togglePublic" class="btn">
         {{ showPublic ? 'Show My Agents' : 'Show Public Agents' }}
       </button>
     </div>
     
-    <div v-if="loading" class="loading">Loading...</div>
+    <div v-if="loading" class="loading">加载中...</div>
     
     <div v-else-if="error" class="error-message">
       <i class="error-icon">!</i>
       {{ error }}
-      <button @click="fetchAgents" class="retry-btn">Retry</button>
+      <button @click="fetchAgents" class="retry-btn">重试</button>
     </div>
     
     <div v-else-if="agents.length === 0" class="no-agents">
-      <p>No agents found.</p>
-      <p v-if="showPublic">No public agents available.</p>
-      <p v-else>Create your first agent!</p>
+      <p>未找到智能体</p>
+      <p v-if="showPublic">无公共智能体可用</p>
+      <p v-else>创建一个新的智能体吧!</p>
     </div>
     
     <div v-else class="agent-grid">
