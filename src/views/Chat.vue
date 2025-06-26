@@ -3,8 +3,8 @@
     <div class="chat-header">
       <h2>Chat with {{ agent.name }}</h2>
       <div class="header-actions">
-        <button @click="testTongyiService" class="test-btn" title="Test TongyiService">Test Service</button>
-        <button @click="testApiConnection" class="test-btn" title="Test API Connection">Test API</button>
+        <!-- <button @click="testTongyiService" class="test-btn" title="Test TongyiService">Test Service</button>
+        <button @click="testApiConnection" class="test-btn" title="Test API Connection">Test API</button> -->
         <button @click="clearSession" class="clear-btn" title="Clear Chat Session">Clear Chat</button>
         <router-link :to="`/agents/${agent.id}`" class="btn">Agent Details</router-link>
       </div>
@@ -216,54 +216,54 @@ export default {
       }
     },
     // 测试API连接
-    async testApiConnection() {
-      console.log('测试API连接...');
-      try {
-        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-        console.log('当前token:', token ? token.substring(0, 20) + '...' : '无token');
+    // async testApiConnection() {
+    //   console.log('测试API连接...');
+    //   try {
+    //     const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    //     console.log('当前token:', token ? token.substring(0, 20) + '...' : '无token');
         
-        // 测试简单的API调用
-        const response = await fetch('http://localhost:5000/agents', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+    //     // 测试简单的API调用
+    //     const response = await fetch('http://localhost:5000/agents', {
+    //       headers: {
+    //         'Authorization': `Bearer ${token}`,
+    //         'Content-Type': 'application/json'
+    //       }
+    //     });
         
-        console.log('API测试响应状态:', response.status);
-        const data = await response.json();
-        console.log('API测试响应数据:', data);
+    //     console.log('API测试响应状态:', response.status);
+    //     const data = await response.json();
+    //     console.log('API测试响应数据:', data);
         
-        return data;
-      } catch (error) {
-        console.error('API测试失败:', error);
-        throw error;
-      }
-    },
+    //     return data;
+    //   } catch (error) {
+    //     console.error('API测试失败:', error);
+    //     throw error;
+    //   }
+    // },
     
     // 测试TongyiService
-    async testTongyiService() {
-      console.log('测试TongyiService...');
-      try {
-        if (!this.agent) {
-          throw new Error('没有可用的智能体');
-        }
+    // async testTongyiService() {
+    //   console.log('测试TongyiService...');
+    //   try {
+    //     if (!this.agent) {
+    //       throw new Error('没有可用的智能体');
+    //     }
         
-        console.log('测试智能体:', this.agent);
+    //     console.log('测试智能体:', this.agent);
         
-        const result = await this.$store.dispatch('agent/executeAgent', {
-          agentId: this.agent.id,
-          userInput: 'Hello, this is a test message.',
-          parentExecutionId: null
-        });
+    //     const result = await this.$store.dispatch('agent/executeAgent', {
+    //       agentId: this.agent.id,
+    //       userInput: 'Hello, this is a test message.',
+    //       parentExecutionId: null
+    //     });
         
-        console.log('TongyiService测试结果:', result);
-        return result;
-      } catch (error) {
-        console.error('TongyiService测试失败:', error);
-        throw error;
-      }
-    }
+    //     console.log('TongyiService测试结果:', result);
+    //     return result;
+    //   } catch (error) {
+    //     console.error('TongyiService测试失败:', error);
+    //     throw error;
+    //   }
+    // }
   },
   watch: {
     messages() {
@@ -333,7 +333,7 @@ export default {
   gap: 10px;
 }
 
-.chat-header .test-btn {
+/* .chat-header .test-btn {
   padding: 10px 20px;
   background: linear-gradient(45deg, #667eea, #764ba2);
   color: white;
@@ -349,7 +349,7 @@ export default {
 .chat-header .test-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
+} */
 
 .chat-header .clear-btn {
   padding: 10px 20px;
