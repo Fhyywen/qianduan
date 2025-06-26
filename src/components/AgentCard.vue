@@ -69,7 +69,7 @@ export default {
       required: true
     }
   },
-  setup(props) {
+  setup(props, { emit }) {
     const store = useStore()
     const router = useRouter()
     const deleting = ref(false)
@@ -107,6 +107,7 @@ export default {
         })
         
         console.log('代理删除成功')
+        emit('delete', agentId) // 通知父组件
       } catch (error) {
         console.error('删除代理失败:', {
           error: error,
