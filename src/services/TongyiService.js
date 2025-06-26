@@ -45,37 +45,82 @@ class TongyiService {
    * @returns {Promise<{response: string, execution: Object}>} 包含AI响应和执行信息的对象
    */
   static async executeAgent({ agent, userInput, parentExecutionId }) {
-    // 参数验证
-    if (!agent || !userInput) {
-      throw new Error('Missing required parameters: agent or userInput');
+  // 参数验证
+  if (!agent || !userInput) {
+    throw new Error('Missing required parameters: agent or userInput');
+  }
+
+  try {
+    const agentId = agent.id;
+    if (!agentId) {
+      throw new Error('Agent对象缺少id字段');
     }
 
-    try {
-// 从agent对象中获取id
-      const agentId = agent.id;
-      if (!agentId) {
-        throw new Error('Agent对象缺少id字段');
+    const payload = {
+      agent_id: agent.id,
+      model: agent.model,
+      input: userInput,
+      parameters: {
+        temperature: agent.temperature,
+        max_tokens: agent.max_tokens
+      },
+      parent_execution_id: parentExecutionId
+    };
+
+    console.log('Sending payload:', payload); // 调试日志
+      
+    const response = await api.post(`/agents/${agentId}/execute`, payload);
+    console.log("API响应完整对象",response)
+    
+    // 更健壮的响应处理
+    if (!response) {
+      console.error('Invalid API response:', response);
+      throw new Error('Invalid API response structure');
+    }
+    
+    console.log('API Response:', response.data); // 调试日志
+    
+    // 兼容不同响应结构
+    const responseText = response.response_text
+    
+    if (!responseText) {
+      console.error('Missing response text in:', responseData);
+      throw new Error('API response missing required field: response_text');
+    }
+    
+
+    return {
+      response_text: responseText,
+      parent_execution_id: parentExecutionId
+    };
+  } catch (error) {
+    // 详细错误分类
+    if (error.response) {
+      // 服务器返回错误状态码
+      const { status, data } = error.response;
+      console.error(`API请求失败 ${status}:`, data);
+      
+      if (status === 401) {
+        // 处理未授权情况
+        throw new Error('身份验证失败，请重新登录');
+      } else if (status === 404) {
+        throw new Error('请求的资源不存在');
+      } else if (status === 500) {
+        throw new Error('服务器内部错误，请稍后重试');
+      } else {
+        throw new Error(data.message || `API错误 ${status}`);
       }
-      console.log("ty-agent.id",agentId)
-
-      const payload = {
-        agent_id: agent.id,
-        model: agent.model,
-        input: userInput,
-        parameters: {
-          temperature: agent.temperature,
-          max_tokens: agent.max_tokens
-        },
-        parent_execution_id: parentExecutionId
-      };
-
-      const response = await api.post(`/agents/${agentId}/execute`, payload);
-      return response.data;
-    } catch (error) {
-      console.error('API Error:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to execute agent');
+    } else if (error.request) {
+      // 请求已发送，但没有收到响应
+      console.error('网络请求错误:', error.request);
+      throw new Error('网络连接失败，请检查网络设置');
+    } else {
+      // 请求设置时出错
+      console.error('请求配置错误:', error.message);
+      throw new Error('请求配置错误');
     }
   }
+}
 
   /**
    * 生成AI响应 - 封装具体API调用逻辑
