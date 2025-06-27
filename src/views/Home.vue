@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <h1>欢迎页面</h1>
+    <h1>欢迎使用智能体管理平台</h1>
   </div>
 </template>
 
