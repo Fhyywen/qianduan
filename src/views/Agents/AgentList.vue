@@ -4,7 +4,7 @@
     <div class="actions">
       <router-link to="/agents/create" class="btn">创建新的智能体</router-link>
       <button @click="togglePublic" class="btn">
-        {{ showPublic ? 'Show My Agents' : 'Show Public Agents' }}
+        {{ showPublic ? '展示我的智能体' : '展示公共智能体' }}
       </button>
     </div>
     
