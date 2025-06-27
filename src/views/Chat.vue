@@ -13,7 +13,15 @@
            :class="['message', message.role]">
         <div class="message-content">
           <span v-if="message.role === 'assistant' && message.isStreaming" class="streaming-indicator">●</span>
-          {{ message.content }}
+          <!-- 用户消息直接显示文本 -->
+          <span v-if="message.role === 'user'">{{ message.content }}</span>
+          <!-- 智能体消息使用Markdown渲染 -->
+          <div v-else-if="message.role === 'assistant'" 
+               class="markdown-content" 
+               v-html="renderMarkdown(message.content)">
+          </div>
+          <!-- 其他消息类型 -->
+          <span v-else>{{ message.content }}</span>
           <span v-if="message.role === 'assistant' && message.isStreaming" class="cursor">|</span>
         </div>
       </div>
@@ -65,6 +73,34 @@ export default {
     }
   },
   methods: {
+    // 简单的Markdown渲染函数
+    renderMarkdown(text) {
+      if (!text) return '';
+      
+      return text
+        // 代码块
+        .replace(/```([\s\S]*?)```/g, '<pre class="code-block"><code>$1</code></pre>')
+        // 行内代码
+        .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+        // 粗体
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // 斜体
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // 标题
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // 列表
+        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+        .replace(/^- (.*$)/gim, '<li>$1</li>')
+        // 将连续的li标签包装在ul中
+        .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+        // 链接
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+        // 换行
+        .replace(/\n/g, '<br>');
+    },
+    
     async fetchAgent() {
       try {
         this.agent = await this.$store.dispatch('agent/fetchAgent', this.agentId)
@@ -457,6 +493,93 @@ export default {
   line-height: 1.5;
   word-wrap: break-word;
   position: relative;
+}
+
+/* Markdown样式 */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin: 10px 0 8px 0;
+  font-weight: 600;
+  color: inherit;
+}
+
+.markdown-content h1 {
+  font-size: 1.4rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 5px;
+}
+
+.markdown-content h2 {
+  font-size: 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 3px;
+}
+
+.markdown-content h3 {
+  font-size: 1.1rem;
+}
+
+.markdown-content strong {
+  font-weight: 700;
+  color: inherit;
+}
+
+.markdown-content em {
+  font-style: italic;
+  color: inherit;
+}
+
+.markdown-content code {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: inherit;
+}
+
+.markdown-content .code-block {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow-x: auto;
+  border-left: 4px solid rgba(255, 255, 255, 0.5);
+}
+
+.markdown-content .code-block code {
+  background: none;
+  padding: 0;
+  color: #f8f8f2;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.markdown-content ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.markdown-content li {
+  margin: 5px 0;
+  color: inherit;
+}
+
+.markdown-content a {
+  color: #fff;
+  text-decoration: underline;
+  transition: all 0.3s ease;
+}
+
+.markdown-content a:hover {
+  color: #f0f0f0;
+  text-decoration: none;
 }
 
 /* 流式指示器样式 */
