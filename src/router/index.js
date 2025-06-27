@@ -10,6 +10,7 @@ const CreateAgent = () => import('@/views/Agents/CreateAgent.vue')
 const AgentDetail = () => import('@/views/Agents/AgentDetail.vue')
 const EditAgent = () => import('@/views/Agents/EditAgent.vue')
 const Chat = () => import('@/views/Chat.vue')
+const StreamTest = () => import('@/views/StreamTest.vue')
 
 const Center = () => import('@/views/Auth/Center.vue')
 
@@ -97,6 +98,15 @@ const routes = [
       title: 'Chat with Agent'
     },
     props: true
+  },
+  {
+    path: '/stream-test',
+    name: 'StreamTest',
+    component: StreamTest,
+    meta: { 
+      requiresAuth: true,
+      title: 'Streaming Test'
+    }
   },
 
   // 404 页面处理

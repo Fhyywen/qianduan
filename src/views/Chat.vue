@@ -11,7 +11,11 @@
     <div class="chat-messages" ref="messagesContainer">
       <div v-for="(message, index) in messages" :key="index" 
            :class="['message', message.role]">
-        <div class="message-content">{{ message.content }}</div>
+        <div class="message-content">
+          <span v-if="message.role === 'assistant' && message.isStreaming" class="streaming-indicator">●</span>
+          {{ message.content }}
+          <span v-if="message.role === 'assistant' && message.isStreaming" class="cursor">|</span>
+        </div>
       </div>
     </div>
     
@@ -45,12 +49,20 @@ export default {
       messages: [],
       userInput: '',
       loading: false,
-      sessionId: null
+      sessionId: null,
+      streamingMessageIndex: null, // 当前正在流式响应的消息索引
+      cursorInterval: null // 光标动画定时器
     }
   },
   async created() {
     await this.fetchAgent()
     this.loadPreviousSession()
+  },
+  beforeDestroy() {
+    // 清理定时器
+    if (this.cursorInterval) {
+      clearInterval(this.cursorInterval)
+    }
   },
   methods: {
     async fetchAgent() {
@@ -61,6 +73,7 @@ export default {
         this.$router.push('/agents')
       }
     },
+    
     loadPreviousSession() {
       // Load previous session if exists
       try {
@@ -85,6 +98,7 @@ export default {
         this.sessionId = null
       }
     },
+    
     saveSession() {
       // Save current session to localStorage
       try {
@@ -124,6 +138,7 @@ export default {
         }
       }
     },
+    
     clearSession() {
       // Clear current session with confirmation
       if (this.messages.length > 0) {
@@ -145,6 +160,7 @@ export default {
         console.log('没有聊天记录需要清除')
       }
     },
+    
     async sendMessage() {
       if (!this.userInput.trim() || this.loading) return;
       
@@ -159,35 +175,15 @@ export default {
         content: this.userInput.trim() // 确保去除空白字符
       };
 
-  this.messages.push(userMessage);
-  this.userInput = '';
-  this.loading = true;
-  console.log("sessionId:",this.sessionId)
-  //从本地存储获取sessionId，如果没有则为null
-  //this.sessionId = localStorage.getItem('agentSessionId') || null; 
-  try {
-    const response = await this.$store.dispatch('agent/executeAgent', {
-      agentId: this.agent.id, // 确保传递正确的 agentId
-      userInput: userMessage.content, // 使用格式化后的内容
-      parentExecutionId: this.sessionId
-    });
-
-    console.log("获得的响应",response)
-    const { responseText,ex_id} =  response;
-    this.ex_id = response.ex_id
-    console.log("提取的:",responseText,ex_id)
-    this.sessionId = ex_id;
-
-    // 将AI的回复添加到消息列表
-    this.messages.push({
-      role: 'assistant',
-      content: responseText // 使用response_text作为回复内容
-    });
-    console.log('当前messages数组:', this.messages);
-
-        // 保存会话到本地存储
-        this.saveSession();
-        
+      this.messages.push(userMessage);
+      this.userInput = '';
+      this.loading = true;
+      
+      console.log("sessionId:", this.sessionId)
+      
+      try {
+        // 默认使用流式响应（带自动回退）
+        await this.sendMessageStream(userMessage.content);
       } catch (error) {
         console.error('Failed to send message:', error);
         
@@ -204,15 +200,94 @@ export default {
         });
       } finally {
         this.loading = false;
+        // 清理流式状态
+        this.streamingMessageIndex = null;
+        if (this.cursorInterval) {
+          clearInterval(this.cursorInterval);
+          this.cursorInterval = null;
+        }
       }
     },
+    
+    async sendMessageStream(userInput) {
+      // 创建初始的助手消息
+      const assistantMessageIndex = this.messages.length;
+      this.messages.push({
+        role: 'assistant',
+        content: '',
+        isStreaming: true
+      });
+      
+      this.streamingMessageIndex = assistantMessageIndex;
+      this.startCursorAnimation();
+      
+      // 定义回调函数
+      const onChunk = (chunk, fullResponse, executionId) => {
+        // 更新消息内容
+        this.messages[assistantMessageIndex].content = fullResponse;
+        this.sessionId = executionId;
+        
+        // 滚动到底部
+        this.$nextTick(() => {
+          this.scrollToBottom();
+        });
+      };
+      
+      const onComplete = (fullResponse, executionId) => {
+        // 完成流式响应
+        this.messages[assistantMessageIndex].content = fullResponse;
+        this.messages[assistantMessageIndex].isStreaming = false;
+        this.sessionId = executionId;
+        
+        // 停止光标动画
+        if (this.cursorInterval) {
+          clearInterval(this.cursorInterval);
+          this.cursorInterval = null;
+        }
+        
+        // 保存会话
+        this.saveSession();
+        
+        console.log('流式响应完成:', {
+          responseLength: fullResponse.length,
+          executionId: executionId
+        });
+      };
+      
+      const onError = (error) => {
+        console.error('流式响应错误:', error);
+        // 移除流式消息，添加错误消息
+        this.messages.splice(assistantMessageIndex, 1);
+        this.messages.push({
+          role: 'error',
+          content: error.message || '流式响应失败'
+        });
+      };
+      
+      // 调用流式服务
+      await this.$store.dispatch('agent/executeAgentStream', {
+        agentId: this.agent.id,
+        userInput: userInput,
+        parentExecutionId: this.sessionId,
+        onChunk,
+        onComplete,
+        onError
+      });
+    },
+    
+    startCursorAnimation() {
+      // 开始光标闪烁动画
+      this.cursorInterval = setInterval(() => {
+        // 光标动画通过CSS实现
+      }, 500);
+    },
+    
     scrollToBottom() {
       const container = this.$refs.messagesContainer
       if (container) {
         container.scrollTop = container.scrollHeight
       }
     },
-
   },
   watch: {
     messages() {
@@ -280,6 +355,7 @@ export default {
 .chat-header .header-actions {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .chat-header .clear-btn {
@@ -380,6 +456,48 @@ export default {
   font-size: 1rem;
   line-height: 1.5;
   word-wrap: break-word;
+  position: relative;
+}
+
+/* 流式指示器样式 */
+.streaming-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* 光标样式 */
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: currentColor;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
 }
 
 .chat-input {

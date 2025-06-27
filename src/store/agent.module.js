@@ -1,9 +1,8 @@
 import TongyiService from '@/services/TongyiService'
 import AgentService from '@/services/agentService';
+import StreamService from '@/services/streamService';
 
 console.log('AgentService 导入成功:', AgentService);
-
-
 
 const state = {
   agents: [],
@@ -219,7 +218,65 @@ const actions = {
   } finally {
     commit('SET_LOADING', false);
   }
-}
+},
+
+  /**
+   * 执行智能体的流式响应（带自动回退）
+   * @param {Object} context Vuex上下文
+   * @param {Object} params 参数对象
+   * @param {string|number} params.agentId 智能体ID
+   * @param {string} params.userInput 用户输入
+   * @param {string|null} params.parentExecutionId 父执行ID
+   * @param {Function} params.onChunk 接收到数据块时的回调函数
+   * @param {Function} params.onComplete 完成时的回调函数
+   * @param {Function} params.onError 错误时的回调函数
+   * @returns {Promise<Object>} 返回执行结果
+   */
+  async executeAgentStream({ commit, state }, { 
+    agentId, 
+    userInput, 
+    parentExecutionId = null,
+    onChunk,
+    onComplete,
+    onError
+  }) {
+    commit('SET_LOADING', true);
+    
+    try {
+      console.log('Vuex executeAgentStream 开始:', { agentId, userInput, parentExecutionId });
+      
+      // 验证参数
+      if (!agentId || !userInput?.trim()) {
+        throw new Error('Missing required parameters: agentId or userInput');
+      }
+      
+      // 确保 agent 存在
+      const agent = state.agents.find(a => a.id === agentId) || state.currentAgent;
+      if (!agent) {
+        throw new Error('Agent not found');
+      }
+
+      // 调用流式服务（带自动回退）
+      const result = await StreamService.executeAgentStream({
+        agentId,
+        userInput: userInput.trim(),
+        parentExecutionId,
+        onChunk,
+        onComplete,
+        onError
+      });
+
+      console.log("流式响应完成:", result);
+      return result;
+      
+    } catch (error) {
+      console.error('流式执行失败:', error);
+      commit('SET_ERROR', error.message);
+      throw new Error(`Failed to execute agent stream: ${error.message}`);
+    } finally {
+      commit('SET_LOADING', false);
+    }
+  }
 }
 
 const getters = {
